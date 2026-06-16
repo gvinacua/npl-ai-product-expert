@@ -3,7 +3,7 @@ import { buildInstructions, type AgentMode } from "../../../lib/agent-instructio
 import { loadLocalKnowledge } from "../../../lib/local-knowledge";
 
 function isValidMode(mode: string): mode is AgentMode {
-  return ["speaker", "lesson", "training", "panel", "sparring", "frontier", "research", "audit"].includes(mode);
+  return ["speaker", "lesson", "source_lesson", "training", "panel", "sparring", "pov", "frontier", "research", "audit"].includes(mode);
 }
 
 function parseBool(value: any) {
@@ -39,6 +39,19 @@ export async function POST(req: Request) {
     const searchModel = process.env.OPENAI_SEARCH_MODEL || deepModel;
     const model = webRequested && webEnabled ? searchModel : deepRequested ? deepModel : baseModel;
 
+    const outputTokenBudget: Record<AgentMode, number> = {
+      sparring: 650,
+      panel: 700,
+      pov: 1200,
+      frontier: 1400,
+      audit: 1600,
+      speaker: 1800,
+      training: 2200,
+      lesson: 2600,
+      source_lesson: 2800,
+      research: 3000
+    };
+
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const tools: any[] = [];
 
@@ -63,6 +76,7 @@ export async function POST(req: Request) {
       instructions: `${buildInstructions(mode)}\n\nLOCAL CURATED KNOWLEDGE BASE:\n${loadLocalKnowledge()}${freshnessInstruction}`,
       input: prompt,
       tools,
+      max_output_tokens: outputTokenBudget[mode],
       temperature: mode === "audit" ? 0.15 : mode === "research" || mode === "frontier" ? 0.25 : 0.35
     } as any);
 

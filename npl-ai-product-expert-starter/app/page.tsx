@@ -5,22 +5,26 @@ import { useState } from "react";
 const modes = [
   { value: "speaker", label: "Speaker Mode", hint: "Keynotes, talks, storylines and speaker notes" },
   { value: "lesson", label: "Lesson Delivery Mode", hint: "Timed class scripts, blocks, pauses and exercises" },
+  { value: "source_lesson", label: "Source-Grounded Lesson Builder", hint: "Client-ready lessons built around verified examples" },
   { value: "training", label: "Training Designer", hint: "Corporate workshops, exercises and learning paths" },
   { value: "panel", label: "Panel / Q&A Expert", hint: "Sharp answers for webinars and executive Q&A" },
   { value: "sparring", label: "AI Sparring Partner", hint: "Challenge ideas, rehearse, refine thinking" },
+  { value: "pov", label: "Point-of-View Builder", hint: "Compare approaches and shape the NPL position" },
   { value: "frontier", label: "Frontier Briefing", hint: "Current signals, upcoming shifts and implications" },
   { value: "research", label: "Research Scout", hint: "Find less obvious sources, tools and examples" },
   { value: "audit", label: "Expertise Audit", hint: "Score depth, originality, evidence and expert quality" }
 ];
 
 const starters: Record<string, string> = {
-  speaker: "Create a 25-minute guest speaker talk for a financial services audience on: From AI tools to AI products. Include storyline, key messages, examples, and speaker notes. Make it sharp, current and non-hype.",
-  lesson: "Deliver a 35-minute interactive class for banking and insurance teams: How to design AI products that survive production. Include timed blocks, spoken script, audience pauses, one exercise, and closing synthesis.",
-  training: "Design a half-day training for a bank or insurer on how to identify, design, test and manage AI products. Include agenda, exercises, participant outputs and facilitator notes.",
-  panel: "Prepare 10 panel answers of 90 seconds each on AI adoption, AI product management, agents, risk and governance in financial services. Avoid generic answers.",
-  sparring: "Challenge our current thinking: what are we likely getting wrong if we want to build an AI Expert Speaker for financial services training? Focus on expertise, differentiation, and delivery.",
+  speaker: "Create a 25-minute guest speaker talk for a financial services audience on: From AI tools to AI products. Audience: mixed banking and insurance. Duration: 25 minutes. Emphasis: nuanced adoption-to-product pathway.",
+  lesson: "Create a 35-minute interactive class for banking and insurance teams on: How to design AI products that survive production. Audience: product, data/AI, innovation, compliance, risk and transformation. Keep it concise and spoken.",
+  source_lesson: "Build a client-ready 35-minute lesson on: From AI tools to AI products in financial services. Use source-grounded examples. Audience: banking and insurance. Include claims to verify.",
+  training: "Design a half-day training for a bank or insurer on how to identify, design, test and manage AI products. Audience: mixed business, product, data/AI and risk teams.",
+  panel: "Prepare concise panel answers on AI adoption, AI product management, agents, risk and governance in financial services. Use nuance and examples. Avoid generic answers.",
+  sparring: "Challenge our current thinking on: building an AI Expert Speaker for financial services training. Focus on expertise, differentiation, source discipline and delivery.",
+  pov: "Develop an NPL point of view on this topic: AI adoption vs AI product discipline in banks and insurers. Compare approaches, evidence, uncertainty and practical implications.",
   frontier: "Brief us on what is changing now in AI agents, voice interfaces and AI products for financial services. Separate confirmed shifts, emerging signals, speculative bets, implications for NPL training, and what to monitor next.",
-  research: "Find 20 sources, tools, examples or weak signals that could make an AI product training program for banks and insurers feel genuinely fresh. Do not only include mainstream sources. Classify each item by source type, confidence, why it matters, and how NPL could use it in a session.",
+  research: "Find sources, tools, examples or weak signals that could make an AI product training program for banks and insurers feel genuinely fresh. Prioritize non-obvious but credible material and classify confidence.",
   audit: "Audit the following output against the NPL AI Expert quality rubric. Score it strictly. Identify what is generic, what is missing, what needs verification, and how to rewrite it so it feels like a real expert.\n\nPaste output here:\n"
 };
 
@@ -121,8 +125,8 @@ export default function Home() {
           </p>
         </div>
         <div className="card" style={{minWidth: 300}}>
-          <strong>Current build v4</strong>
-          <p className="small">Expertise audit + research scout + optional web search + deeper quality gates. Browser voice preview included; real-time voice later.</p>
+          <strong>Current build v4.3</strong>
+          <p className="small">Embedded quality instructions across all modes + source-grounded lesson builder + point-of-view builder. Browser voice preview included; real-time voice later.</p>
           <div className="mode-list">
             {modes.map(m => <div key={m.value} className="mode-pill"><strong>{m.label}</strong><br/><span className="small">{m.hint}</span></div>)}
           </div>
@@ -164,7 +168,7 @@ export default function Home() {
           <div className="output-header">
             <div>
               <strong>Output</strong>
-              <p className="small">Generate talks, lessons, research scans, panel answers and audits. Use “Audit current output” to pressure-test quality.</p>
+              <p className="small">Generate talks, source-grounded lessons, research scans, point-of-view briefs, panel answers and audits. Use “Audit current output” to pressure-test quality.</p>
               {meta && <p className="small">Model: {meta.model} · Tools: {(meta.tools || []).join(", ") || "none"} · Web: {String(meta.web_enabled && meta.web_requested)}</p>}
             </div>
             <div className="button-row">
