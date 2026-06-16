@@ -17,3 +17,14 @@ button:disabled { opacity: .55; cursor: wait; }
 .small { color: #6a6a6a; font-size: 13px; line-height: 1.45; }
 .mode-list { display: grid; gap: 8px; margin-top: 14px; }
 .mode-pill { padding: 10px 12px; border: 1px solid #e5e1d8; border-radius: 12px; background: #fbfaf7; font-size: 14px; }
+
+.output-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 8px; }
+.button-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+button.secondary { background: #f3f0e9; color: #111; border: 1px solid #ddd5c7; padding: 9px 11px; margin-top: 0; font-size: 13px; }
+button.secondary:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 850px) { .output-header { flex-direction: column; } .button-row { justify-content: flex-start; } }
+
+.option-box { border: 1px solid #e5e1d8; border-radius: 14px; padding: 10px 12px; background: #fbfaf7; margin: 14px 0; }
+.check-label { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; font-weight: 650; }
+.check-label input { width: auto; }
+button.full { width: 100%; }

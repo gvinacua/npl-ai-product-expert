@@ -1,54 +1,180 @@
-# Source Register — Research Pack v1
+# Source Register — NPL AI Product Expert v3
 
-## Primary sources
-1. OpenAI — The State of Enterprise AI 2025
-URL: https://openai.com/business/guides-and-resources/the-state-of-enterprise-ai-2025-report/
-Use: enterprise AI adoption, shift from capabilities to products/services, frontier organization patterns.
+## Purpose
+This register guides the expert's use of sources. It is not a live citation database. Verify fast-moving facts before external publication.
 
-2. OpenAI — New tools for building agents, 2025
+## Source confidence tiers
+- Tier A: official, regulatory, standards, primary technical docs.
+- Tier B: reputable research, industry reports, established analysts.
+- Tier C: vendor/product signals, useful but biased.
+- Tier D: frontier weak signals, useful for hypotheses only.
+
+---
+
+## Tier A — Official / regulatory / standards / primary docs
+
+### OpenAI — New tools for building agents
 URL: https://openai.com/index/new-tools-for-building-agents/
-Use: definition of agents as systems that independently accomplish tasks on behalf of users.
+Why useful: Primary source for OpenAI Responses API, built-in tools and Agents SDK direction.
+Use for: agent architecture, product stack, agentic application building blocks.
+Caution: vendor source; accurate for OpenAI capabilities, not neutral market assessment.
 
-3. NIST — AI Risk Management Framework
-URL: https://www.nist.gov/itl/ai-risk-management-framework
-Use: risk management framing for AI systems.
+### OpenAI — Realtime API documentation
+URL: https://developers.openai.com/api/docs/guides/realtime
+Why useful: Primary source for realtime voice/audio agent architecture.
+Use for: future voice mode, low-latency conversation, speech-to-speech design.
+Caution: technical implementation details change.
 
-4. NIST — AI RMF Generative AI Profile
+### NIST — AI Risk Management Framework: Generative AI Profile
 URL: https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence
-Use: trustworthiness considerations in generative AI products, services and systems.
+Why useful: Strong framework for GenAI risk identification and management.
+Use for: governance, risk, evaluation, training content for regulated firms.
+Caution: framework guidance, not sector-specific legal advice.
 
-5. OECD — AI Principles, updated 2024
-URL: https://www.oecd.org/en/topics/sub-issues/ai-principles.html
-Use: trustworthy AI values and practical recommendations.
+### Bank of England — Financial Stability in Focus: Artificial intelligence in the financial system
+URL: https://www.bankofengland.co.uk/financial-stability-in-focus/2025/april-2025
+Why useful: Financial stability perspective on AI use and risks in the financial system.
+Use for: banking/insurance AI opportunity and risk framing.
+Caution: UK context; verify latest versions.
 
-6. Bank of England / FCA — Artificial intelligence in UK financial services 2024
+### FCA / Bank of England — AI/ML in UK financial services survey/report family
 URL: https://www.bankofengland.co.uk/report/2024/artificial-intelligence-in-uk-financial-services-2024
-Use: financial services AI/ML adoption and supervisory context.
+Why useful: Evidence on adoption, use cases, risk management and governance in financial services.
+Use for: training content on adoption maturity and risk controls.
+Caution: UK-specific and survey-based.
 
-7. European Banking Authority — Special topic: Artificial intelligence
-URL: https://www.eba.europa.eu/publications-and-media/publications/special-topic-artificial-intelligence
-Use: upward deployment of AI methods in EU banks.
+### OECD AI Principles
+URL: https://oecd.ai/en/ai-principles
+Why useful: International principles for trustworthy AI.
+Use for: governance, responsible AI framing.
+Caution: principle-level, not operational enough alone.
 
-8. McKinsey — The future of AI in the insurance industry, 2025
-URL: https://www.mckinsey.com/industries/financial-services/our-insights/the-future-of-ai-in-the-insurance-industry
-Use: comprehensive enterprise approach to AI value in insurance.
+### EU AI Act official resources
+URL: https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai
+Why useful: Regulatory context for AI systems in Europe.
+Use for: risk tiering awareness and compliance conversation.
+Caution: Need legal review for client-specific interpretation.
 
-9. McKinsey — Banking on gen AI in the credit business, 2025
-URL: https://www.mckinsey.com/capabilities/risk-and-resilience/our-insights/banking-on-gen-ai-in-the-credit-business-the-route-to-value-creation
-Use: genAI in credit and journey to value creation.
+---
 
-10. Bain — Generative AI in Financial Services: Eight Risks and How to Overcome Them
-URL: https://www.bain.com/insights/generative-ai-in-financial-services/
-Use: risk segmentation and controls in financial services genAI.
+## Tier B — Reputable research / financial services analysis
 
-11. Bain — The Gap Between AI Strategy and Reality Is Execution
-URL: https://www.bain.com/insights/the-gap-between-ai-strategy-and-reality-is-execution/
-Use: execution, sequencing, scaling and sustaining AI transformation.
+### FinRegLab — The Next Wave Arrives: Agentic AI in Financial Services
+URL: https://finreglab.org/wp-content/uploads/2025/09/FinRegLab_09-04-2025_The-Next-Wave-Arrives-Main.pdf
+Why useful: Focused analysis of agentic AI in financial services.
+Use for: frontier signals, governance questions, financial ecosystem implications.
+Caution: report framing; verify recent updates.
 
-12. IBM — What are AI agents?
-URL: https://www.ibm.com/think/topics/ai-agents
-Use: plain-language agent definition.
+### World Economic Forum — Artificial Intelligence in Financial Services 2025
+URL: https://reports.weforum.org/docs/WEF_Artificial_Intelligence_in_Financial_Services_2025.pdf
+Why useful: Broad view of AI investment, use cases and financial services implications.
+Use for: market context and executive framing.
+Caution: forecasts and aggregate investment numbers should be verified before public use.
 
-13. Anthropic — Measuring AI agent autonomy in practice, 2026
-URL: https://www.anthropic.com/research/measuring-agent-autonomy
-Use: autonomy as an emerging capability dimension.
+### Evident Insights — AI Outcomes Report 2025
+URL: https://evidentinsights.com/insights/outcomes-report/
+Why useful: Benchmarking how major banks generate value from GenAI and agentic AI.
+Use for: bank examples and outcomes framing.
+Caution: may be gated/private; use public summary only unless licensed.
+
+### Capgemini — Reimagining financial services with agentic AI
+URL: https://www.capgemini.com/insights/research-library/reimagining-financial-services-with-agentic-ai/
+Why useful: Useful view of agentic AI use cases across banking and insurance.
+Use for: claims, underwriting, personalization, retail banking, wealth management.
+Caution: consulting POV; check claims against primary examples.
+
+### Capgemini Research Institute — Rise of agentic AI
+URL: https://www.capgemini.com/insights/research-library/ai-agents/
+Why useful: Macro view on economic value and adoption of agents.
+Use for: executive-level opportunity framing.
+Caution: forecasts are directional.
+
+### IBM Think — AI Agents in 2025: Expectations vs. Reality
+URL: https://www.ibm.com/think/insights/ai-agents-2025-expectations-vs-reality
+Why useful: Helps balance agent hype with realistic adoption patterns.
+Use for: non-hype framing.
+Caution: vendor/consulting lens.
+
+### Anthropic — Agentic coding trends report
+URL: https://resources.anthropic.com/hubfs/2026%20Agentic%20Coding%20Trends%20Report.pdf
+Why useful: Strong signal on agents moving from assistance to implementation workflows.
+Use for: analogies on agentic workflows and operating model change.
+Caution: coding-focused and vendor-authored.
+
+---
+
+## Tier C — Vendor / platform market signals
+
+### Salesforce Agentforce
+URL: https://www.salesforce.com/eu/agentforce/
+Why useful: Shows enterprise agent platform direction: lifecycle, testing, supervision, workflows.
+Use for: vendor landscape and agent platform patterns.
+Caution: vendor marketing.
+
+### Microsoft Copilot Studio
+URL: https://www.microsoft.com/en-us/microsoft-365-copilot/microsoft-copilot-studio
+Why useful: Shows low-code/pro-code enterprise agent creation and publishing into Microsoft 365.
+Use for: enterprise agent stack and build/buy discussion.
+Caution: vendor marketing.
+
+### Microsoft Build 2025 — Age of AI agents and open agentic web
+URL: https://blogs.microsoft.com/blog/2025/05/19/microsoft-build-2025-the-age-of-ai-agents-and-building-the-open-agentic-web/
+Why useful: Primary Microsoft framing of agents, reasoning, memory and developer tooling.
+Use for: frontier platform landscape.
+Caution: vendor narrative.
+
+### Salesforce / Fin acquisition reporting
+URL: https://www.reuters.com/business/salesforce-buy-fin-about-36-billion-2026-06-15/
+Why useful: Market signal that enterprise software vendors are investing heavily in autonomous customer service agents.
+Use for: frontier radar and agent platform market momentum.
+Caution: news item; verify deal status and details.
+
+### Google Agentspace / Vertex AI Agent Builder materials
+URL: https://cloud.google.com/products/agentspace
+Why useful: Shows enterprise data + AI agent workplace patterns.
+Use for: vendor landscape.
+Caution: vendor marketing.
+
+### LangChain / LangGraph documentation
+URL: https://docs.langchain.com/oss/python/langgraph/overview
+Why useful: State-based agent orchestration and human-in-the-loop architecture.
+Use for: technical design of future agent stack.
+Caution: technical library docs, not business evidence.
+
+### LlamaIndex agentic retrieval materials
+URL: https://www.llamaindex.ai/blog/rag-is-dead-long-live-agentic-retrieval
+Why useful: Good framing on retrieval moving beyond simple vector search.
+Use for: knowledge architecture and advanced RAG.
+Caution: vendor/startup POV.
+
+---
+
+## Tier D — Frontier weak-signal sources to monitor
+
+### AI Engineer / Latent Space / Sequoia AI Ascent / a16z AI materials
+Why useful: Early product, architecture and market patterns from builders and investors.
+Use for: hypotheses, debate cards, frontier radar.
+Caution: not authoritative; often optimistic.
+
+### Practitioner posts from AI product leaders, ML engineers, bank innovation teams
+Why useful: Real-world frictions and emerging practices.
+Use for: examples and workshop provocations.
+Caution: verify before client-facing claims.
+
+### GitHub repos and open-source projects
+Why useful: Shows what builders are experimenting with.
+Use for: technical radar.
+Caution: popularity does not equal enterprise readiness.
+
+### Conference talks and podcasts
+Why useful: Emerging language and narratives.
+Use for: speaker style and trend sensing.
+Caution: often anecdotal.
+
+---
+
+## Santander/NPL internal source family
+Source: SAN_AI_v3_comp.pdf and future NPL materials.
+Why useful: Internal/NPL-adjacent program context, especially the distinction between AI capabilities and AI products, the lifecycle of AI product creation, and production management in a regulated bank setting.
+Use for: NPL point of view, program architecture, client-ready framing.
+Caution: must avoid treating proposal claims as external facts unless independently verified.

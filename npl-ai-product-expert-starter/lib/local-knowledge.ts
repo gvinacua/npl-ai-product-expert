@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 const KNOWLEDGE_DIR = path.join(process.cwd(), "knowledge");
-const MAX_CHARS = 28000;
+const DEFAULT_MAX_CHARS = 120000;
 
 export function loadLocalKnowledge(): string {
   try {
@@ -20,8 +20,9 @@ export function loadLocalKnowledge(): string {
       })
       .join("\n");
 
-    if (content.length > MAX_CHARS) {
-      return content.slice(0, MAX_CHARS) + "\n\n[Local knowledge truncated for context length.]";
+    const maxChars = Number(process.env.LOCAL_KNOWLEDGE_MAX_CHARS || DEFAULT_MAX_CHARS);
+    if (content.length > maxChars) {
+      return content.slice(0, maxChars) + "\n\n[Local knowledge truncated for context length.]";
     }
     return content;
   } catch (error) {
