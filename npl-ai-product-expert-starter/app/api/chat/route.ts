@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { buildInstructions, type AgentMode } from "../../../lib/agent-instructions";
+import { loadLocalKnowledge } from "../../../lib/local-knowledge";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
 
     const response = await openai.responses.create({
       model: process.env.OPENAI_MODEL || "gpt-5.5",
-      instructions: buildInstructions(mode),
+      instructions: `${buildInstructions(mode)}\n\nLOCAL CURATED KNOWLEDGE BASE:\n${loadLocalKnowledge()}`,
       input: prompt,
       tools,
       temperature: 0.4
