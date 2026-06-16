@@ -1,0 +1,27 @@
+{
+  "name": "npl-ai-product-expert",
+  "version": "0.4.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "kb:create-vector-store": "tsx scripts/create-vector-store.ts",
+    "kb:upload": "tsx scripts/upload-knowledge.ts"
+  },
+  "dependencies": {
+    "@openai/agents": "latest",
+    "next": "latest",
+    "openai": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}
