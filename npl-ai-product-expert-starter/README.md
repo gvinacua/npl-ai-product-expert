@@ -1,4 +1,4 @@
-# NPL AI Product Expert — v4.3
+# NPL AI Product Expert — v4.2
 
 This version adds a concise expert persona and tighter output controls.
 
@@ -6,7 +6,7 @@ This version adds a concise expert persona and tighter output controls.
 
 Internal prototype of an AI expert speaker and trainer for financial services AI product programs.
 
-## Current version: v4.3
+## Current version: v4.2
 
 This version includes:
 - Speaker Mode
@@ -68,14 +68,10 @@ Audit this output against the NPL AI Expert quality rubric. Be strict. Identify 
 Deliver a 35-minute interactive class for banking and insurance teams: How to design AI products that survive production. Include timed blocks, spoken script, audience pauses, one exercise, and closing synthesis.
 ```
 
-## v4.3 update
+## v4.2 update
 
 This version corrects the expert's adoption thesis. It should no longer frame broad AI adoption as mere theatre. The expert now distinguishes between unmanaged tool dumping and adoption-with-operating-model: training, champions/wizards, communities, safe platforms, shared skills, use-case marketplaces and a path from individual productivity to governed workflows and AI products.
 
 
-## v4.3 additions
-
-- Source-Grounded Lesson Builder mode for client-facing lessons built around verified examples.
-- Point-of-View Builder mode for nuanced NPL positions on contested AI topics.
-- Embedded quality defaults across all modes: concise outputs, no invented company cases, claims-to-verify, financial-services specificity and source discipline.
-- New knowledge pack: `knowledge/18_mode_quality_and_point_of_view_engine.md`.
+## v4.4 note
+This version strengthens evidence discipline across modes: source links/anchors, claim status for named cases, what is confirmed/inferred/to verify, and stronger Point-of-View evidence requirements.

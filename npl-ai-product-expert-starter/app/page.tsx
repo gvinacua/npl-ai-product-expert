@@ -125,8 +125,8 @@ export default function Home() {
           </p>
         </div>
         <div className="card" style={{minWidth: 300}}>
-          <strong>Current build v4.3</strong>
-          <p className="small">Embedded quality instructions across all modes + source-grounded lesson builder + point-of-view builder. Browser voice preview included; real-time voice later.</p>
+          <strong>Current build v4.4</strong>
+          <p className="small">Evidence discipline upgrade: source links/anchors, named-case claim status, stronger PoV evidence, source-grounded lesson builder. Browser voice preview included; real-time voice later.</p>
           <div className="mode-list">
             {modes.map(m => <div key={m.value} className="mode-pill"><strong>{m.label}</strong><br/><span className="small">{m.hint}</span></div>)}
           </div>
