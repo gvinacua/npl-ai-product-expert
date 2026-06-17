@@ -75,3 +75,9 @@ This version corrects the expert's adoption thesis. It should no longer frame br
 
 ## v4.4 note
 This version strengthens evidence discipline across modes: source links/anchors, claim status for named cases, what is confirmed/inferred/to verify, and stronger Point-of-View evidence requirements.
+
+
+## v4.5.1 deploy fix
+- Removed package-lock.json from the package to avoid registry URL lock issues.
+- Removed unused @openai/agents and tsx dependencies.
+- Pinned deployment dependencies for more stable Vercel builds.
