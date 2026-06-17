@@ -3,7 +3,7 @@ import { buildInstructions, type AgentMode } from "../../../lib/agent-instructio
 import { loadLocalKnowledge } from "../../../lib/local-knowledge";
 
 function isValidMode(mode: string): mode is AgentMode {
-  return ["speaker", "lesson", "source_lesson", "training", "panel", "sparring", "pov", "frontier", "research", "audit"].includes(mode);
+  return ["speaker", "lesson", "source_lesson", "voice_delivery", "training", "panel", "sparring", "pov", "frontier", "research", "audit"].includes(mode);
 }
 
 function parseBool(value: any) {
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
       training: 2200,
       lesson: 2600,
       source_lesson: 2800,
+      voice_delivery: 1800,
       research: 3000
     };
 

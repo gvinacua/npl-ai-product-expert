@@ -6,6 +6,7 @@ const modes = [
   { value: "speaker", label: "Speaker Mode", hint: "Keynotes, talks, storylines and speaker notes" },
   { value: "lesson", label: "Lesson Delivery Mode", hint: "Timed class scripts, blocks, pauses and exercises" },
   { value: "source_lesson", label: "Source-Grounded Lesson Builder", hint: "Client-ready lessons built around verified examples" },
+  { value: "voice_delivery", label: "Voice Delivery Prep", hint: "Turns content into speakable blocks for TTS or live voice" },
   { value: "training", label: "Training Designer", hint: "Corporate workshops, exercises and learning paths" },
   { value: "panel", label: "Panel / Q&A Expert", hint: "Sharp answers for webinars and executive Q&A" },
   { value: "sparring", label: "AI Sparring Partner", hint: "Challenge ideas, rehearse, refine thinking" },
@@ -19,6 +20,7 @@ const starters: Record<string, string> = {
   speaker: "Create a 25-minute guest speaker talk for a financial services audience on: From AI tools to AI products. Audience: mixed banking and insurance. Duration: 25 minutes. Emphasis: nuanced adoption-to-product pathway.",
   lesson: "Create a 35-minute interactive class for banking and insurance teams on: How to design AI products that survive production. Audience: product, data/AI, innovation, compliance, risk and transformation. Keep it concise and spoken.",
   source_lesson: "Build a client-ready 35-minute lesson on: From AI tools to AI products in financial services. Use source-grounded examples. Audience: banking and insurance. Include claims to verify.",
+  voice_delivery: "Convert this topic into a concise spoken delivery for a synthetic guest speaker: From AI tools to AI products in financial services. Create 6 short voice-ready blocks, one audience pause, one interaction, and delivery notes.",
   training: "Design a half-day training for a bank or insurer on how to identify, design, test and manage AI products. Audience: mixed business, product, data/AI and risk teams.",
   panel: "Prepare concise panel answers on AI adoption, AI product management, agents, risk and governance in financial services. Use nuance and examples. Avoid generic answers.",
   sparring: "Challenge our current thinking on: building an AI Expert Speaker for financial services training. Focus on expertise, differentiation, source discipline and delivery.",
@@ -56,6 +58,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [useWeb, setUseWeb] = useState(false);
   const [useDeep, setUseDeep] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState("");
+  const [audioError, setAudioError] = useState("");
 
   function changeMode(next: string) {
     setMode(next);
@@ -98,6 +103,33 @@ export default function Home() {
     }
   }
 
+
+  async function generateElevenLabsAudio() {
+    if (!output) return;
+    setAudioLoading(true);
+    setAudioError("");
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    setAudioUrl("");
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: output, password })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "TTS request failed");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      setAudioUrl(url);
+    } catch (e: any) {
+      setAudioError(e.message || "Audio generation failed");
+    } finally {
+      setAudioLoading(false);
+    }
+  }
+
   function auditCurrentOutput() {
     if (!output) return;
     setMode("audit");
@@ -125,8 +157,8 @@ export default function Home() {
           </p>
         </div>
         <div className="card" style={{minWidth: 300}}>
-          <strong>Current build v4.4</strong>
-          <p className="small">Evidence discipline upgrade: source links/anchors, named-case claim status, stronger PoV evidence, source-grounded lesson builder. Browser voice preview included; real-time voice later.</p>
+          <strong>Current build v4.5</strong>
+          <p className="small">Voice delivery upgrade: voice-ready mode plus ElevenLabs audio generation. Evidence discipline and source-grounded modes remain active.</p>
           <div className="mode-list">
             {modes.map(m => <div key={m.value} className="mode-pill"><strong>{m.label}</strong><br/><span className="small">{m.hint}</span></div>)}
           </div>
@@ -173,11 +205,14 @@ export default function Home() {
             </div>
             <div className="button-row">
               <button className="secondary" onClick={copyOutput}>Copy</button>
-              <button className="secondary" onClick={readOutput}>Read aloud</button>
+              <button className="secondary" onClick={readOutput}>Browser voice</button>
+              <button className="secondary" onClick={generateElevenLabsAudio} disabled={audioLoading || !output}>{audioLoading ? "Creating audio…" : "ElevenLabs audio"}</button>
               <button className="secondary" onClick={stopVoice}>Stop</button>
               <button className="secondary" onClick={auditCurrentOutput}>Audit current output</button>
             </div>
           </div>
+          {audioError && <p className="small error-text">{audioError}</p>}
+          {audioUrl && <audio className="audio-player" controls src={audioUrl} />}
           <div className="output">{output || "The generated answer will appear here."}</div>
         </div>
       </section>
