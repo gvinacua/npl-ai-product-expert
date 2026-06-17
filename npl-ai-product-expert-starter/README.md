@@ -1,8 +1,8 @@
-# NPL AI Product Expert v4.6
+# NPL AI Product Expert v4.7
 
 Internal prototype for a research-led AI product expert speaker/trainer for financial services.
 
-## v4.6 focus
+## v4.7 focus
 - Cost control layer.
 - Better internal UX.
 - Block-level ElevenLabs audio generation.

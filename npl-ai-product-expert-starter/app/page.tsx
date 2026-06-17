@@ -94,6 +94,56 @@ function modeCostLabel(cost: ModeDef["cost"]) {
   return "High-value / use deep selectively";
 }
 
+function estimateTokens(text: string) {
+  return Math.max(1, Math.ceil((text || "").length / 4));
+}
+
+function euro(amount: number) {
+  if (amount < 0.01) return "<€0.01";
+  return `~€${amount.toFixed(amount < 1 ? 2 : 1)}`;
+}
+
+function costBand(amount: number) {
+  if (amount < 0.05) return "Low";
+  if (amount < 0.50) return "Medium";
+  return "High";
+}
+
+function modelCostProxy(modelLabel: string, inputTokens: number, maxOutputTokens: number, web: boolean) {
+  // Approximate EUR proxy only. Update these assumptions as provider pricing changes.
+  const model = (modelLabel || "").toLowerCase();
+  const rates = model.includes("mini")
+    ? { inputPer1M: 0.15, outputPer1M: 0.60 }
+    : { inputPer1M: 2.00, outputPer1M: 8.00 };
+  const base = (inputTokens * rates.inputPer1M + maxOutputTokens * rates.outputPer1M) / 1_000_000;
+  const webPremium = web ? 0.02 : 0;
+  return base + webPremium;
+}
+
+function elevenCostProxy(chars: number) {
+  // ElevenLabs plans/pricing vary. This is a rough planning proxy, not billing truth.
+  const estimatedCredits = chars;
+  const eurProxy = chars * 0.00018;
+  return { estimatedCredits, eurProxy };
+}
+
+function estimatedOutputBudget(modeValue: string) {
+  const budgets: Record<string, number> = {
+    sparring: 650,
+    panel: 700,
+    pov: 1200,
+    frontier: 1400,
+    audit: 1600,
+    speaker: 1800,
+    training: 2200,
+    lesson: 2600,
+    source_lesson: 2800,
+    voice_delivery: 1800,
+    research: 3000
+  };
+  return budgets[modeValue] || 1600;
+}
+
 export default function Home() {
   const [mode, setMode] = useState("voice_delivery");
   const [prompt, setPrompt] = useState(starters.voice_delivery);
@@ -114,6 +164,11 @@ export default function Home() {
   const outputChars = cleanForVoice(output).length;
   const suggestedModelUse = useDeep ? "Deep model on" : "Draft model on";
   const webStatus = useWeb ? "Web requested" : "Local knowledge only";
+  const estimatedInputTokens = estimateTokens(prompt);
+  const estimatedMaxOutputTokens = estimatedOutputBudget(mode);
+  const modelProxyName = useDeep ? "deep model" : "gpt-4.1-mini/draft";
+  const estimatedTextCost = modelCostProxy(modelProxyName, estimatedInputTokens, estimatedMaxOutputTokens, useWeb);
+  const fullAudioProxy = elevenCostProxy(Math.min(outputChars || 0, maxAudioChars));
 
   function changeMode(next: string) {
     setMode(next);
@@ -229,14 +284,14 @@ export default function Home() {
         </div>
         <div className="card build-card">
           <div className="build-topline">
-            <strong>Current build v4.6</strong>
-            <span className="mini-badge">Cost + block voice UX</span>
+            <strong>Current build v4.7</strong>
+            <span className="mini-badge">Cost proxy + block voice UX</span>
           </div>
           <p className="small">Use cheap models for drafts, deep models only for high-value outputs, and ElevenLabs only for selected voice blocks.</p>
           <div className="delivery-options">
             <div><strong>1. Prep</strong><span>Generate script, slides, Q&A.</span></div>
             <div><strong>2. Voice blocks</strong><span>Render selected blocks only.</span></div>
-            <div><strong>3. Live later</strong><span>Vapi/OpenAI Realtime with human control.</span></div>
+            <div><strong>3. Voice expert next</strong><span>Interactive Q&A via Vapi/OpenAI Realtime.</span></div>
           </div>
         </div>
       </section>
@@ -255,6 +310,21 @@ export default function Home() {
           <div className="cost-box">
             <strong>Cost guardrails</strong>
             <p className="small">Mode: {modeCostLabel(activeMode.cost)} · {suggestedModelUse} · {webStatus}</p>
+
+            <div className="cost-proxy-grid">
+              <div>
+                <span className="cost-label">Text estimate</span>
+                <strong>{euro(estimatedTextCost)}</strong>
+                <small>{costBand(estimatedTextCost)} · rough proxy</small>
+              </div>
+              <div>
+                <span className="cost-label">Audio cap</span>
+                <strong>{euro(elevenCostProxy(maxAudioChars).eurProxy)}</strong>
+                <small>{maxAudioChars.toLocaleString()} chars max</small>
+              </div>
+            </div>
+            <p className="small">Estimates are for decision-making, not billing. Prices vary by provider, plan, model and currency.</p>
+
             <label className="check-label">
               <input type="checkbox" checked={useDeep} onChange={e => setUseDeep(e.target.checked)} />
               <span>Use deep model</span>
@@ -269,7 +339,7 @@ export default function Home() {
 
             <label>Max ElevenLabs chars</label>
             <input type="number" min="200" max="5000" step="100" value={maxAudioChars} onChange={(e) => setMaxAudioChars(Number(e.target.value || 1200))} />
-            <p className="small">Default: speak selected text or one block, not the full output.</p>
+            <p className="small">Default: speak selected text or one block, not the full output. Current cap ≈ {fullAudioProxy.estimatedCredits.toLocaleString()} credits / {euro(fullAudioProxy.eurProxy)} proxy.</p>
           </div>
 
           <label>Request</label>
@@ -285,7 +355,7 @@ export default function Home() {
                 <strong>Output</strong>
                 <p className="small">Generate the thinking here. Use voice on selected blocks only. Audit when quality matters.</p>
                 {meta && <p className="small">Model: {meta.model} · Profile: {meta.cost_profile || "n/a"} · Tools: {(meta.tools || []).join(", ") || "none"} · Web: {String(meta.web_enabled && meta.web_requested)}</p>}
-                {!!output && <p className="small">Clean voice length: {outputChars.toLocaleString()} chars · Blocks detected: {voiceBlocks.length}</p>}
+                {!!output && <p className="small">Clean voice length: {outputChars.toLocaleString()} chars · Blocks detected: {voiceBlocks.length} · Full-output audio proxy: {euro(elevenCostProxy(outputChars).eurProxy)}</p>}
               </div>
               <div className="button-row">
                 <button className="secondary" onClick={copyOutput}>Copy</button>
@@ -296,7 +366,7 @@ export default function Home() {
               </div>
             </div>
             {audioError && <p className="small error-text">{audioError}</p>}
-            {audioUrl && <div className="audio-box"><audio className="audio-player" controls src={audioUrl} /><p className="small">Audio generated from {audioText.length.toLocaleString()} chars.</p></div>}
+            {audioUrl && <div className="audio-box"><audio className="audio-player" controls src={audioUrl} /><p className="small">Audio generated from {audioText.length.toLocaleString()} chars · approx. {euro(elevenCostProxy(audioText.length).eurProxy)} proxy.</p></div>}
             <div className="output">{output || "The generated answer will appear here."}</div>
           </div>
 
@@ -313,7 +383,7 @@ export default function Home() {
                   <div className="voice-block" key={`${idx}-${block.slice(0, 20)}`}>
                     <div className="voice-block-title">
                       <strong>Block {idx + 1}</strong>
-                      <span className="small">{block.length} chars</span>
+                      <span className="small">{block.length} chars · {euro(elevenCostProxy(block.length).eurProxy)}</span>
                     </div>
                     <p>{block.length > 280 ? `${block.slice(0, 280)}…` : block}</p>
                     <div className="button-row left">

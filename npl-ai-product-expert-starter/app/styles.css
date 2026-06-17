@@ -55,3 +55,11 @@ button.full { width: 100%; }
 .voice-block p { margin:0 0 10px; color:#333; line-height:1.45; font-size:14px; }
 .button-row.left { justify-content:flex-start; }
 @media (max-width: 900px) { .app-shell { grid-template-columns: 1fr; } .control-card { position:static; } .build-card { max-width: none; } }
+
+/* v4.7 cost proxy additions */
+.cost-proxy-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin:12px 0; }
+.cost-proxy-grid div { border:1px solid #e0d7c8; background:#fffdf8; border-radius:12px; padding:10px; display:grid; gap:3px; }
+.cost-proxy-grid strong { font-size:18px; letter-spacing:-0.02em; }
+.cost-proxy-grid small { color:#6a6a6a; font-size:12px; }
+.cost-label { font-size:12px; color:#6b5c3b; text-transform:uppercase; letter-spacing:.04em; font-weight:750; }
+@media (max-width: 460px) { .cost-proxy-grid { grid-template-columns: 1fr; } }
