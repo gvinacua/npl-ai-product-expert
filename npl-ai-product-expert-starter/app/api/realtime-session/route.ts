@@ -38,9 +38,9 @@ export async function POST(req: Request) {
     }
 
     const model = parseBool(useDeep)
-      ? (process.env.OPENAI_REALTIME_DEEP_MODEL || process.env.OPENAI_REALTIME_MODEL || "gpt-4o-realtime-preview")
-      : (process.env.OPENAI_REALTIME_MODEL || "gpt-4o-mini-realtime-preview");
-    const voice = process.env.OPENAI_REALTIME_VOICE || "alloy";
+      ? (process.env.OPENAI_REALTIME_DEEP_MODEL || process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2")
+      : (process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2");
+    const voice = process.env.OPENAI_REALTIME_VOICE || "marin";
 
     const instructions = `${buildInstructions("panel")}
 
@@ -49,28 +49,40 @@ ${REALTIME_VOICE_BRIEF}
 Session context supplied by operator:
 ${typeof context === "string" && context.trim() ? context.trim().slice(0, 3000) : "General interactive Q&A on AI products in financial services."}`;
 
-    const upstream = await fetch("https://api.openai.com/v1/realtime/sessions", {
+    const upstream = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "OpenAI-Safety-Identifier": "npl-ai-product-expert-internal"
       },
       body: JSON.stringify({
-        model,
-        voice,
-        instructions,
-        modalities: ["audio", "text"],
-        input_audio_transcription: { model: "whisper-1" },
-        turn_detection: { type: "server_vad", silence_duration_ms: 800 }
+        session: {
+          type: "realtime",
+          model,
+          instructions,
+          audio: {
+            output: { voice },
+            input: {
+              transcription: { model: "whisper-1" },
+              turn_detection: { type: "server_vad", silence_duration_ms: 800 }
+            }
+          }
+        }
       })
     });
 
     const data = await upstream.json();
     if (!upstream.ok) {
-      return Response.json({ error: data.error?.message || "Failed to create realtime session", details: data }, { status: upstream.status });
+      return Response.json({ error: data.error?.message || "Failed to create realtime client secret", details: data }, { status: upstream.status });
     }
 
-    return Response.json({ ...data, model, voice });
+    const secretValue = data.value || data.client_secret?.value;
+    if (!secretValue) {
+      return Response.json({ error: "Realtime client secret response did not include a value", details: data }, { status: 500 });
+    }
+
+    return Response.json({ ...data, client_secret: { value: secretValue }, model, voice });
   } catch (error: any) {
     console.error(error);
     return Response.json({ error: error.message || "Unexpected realtime session error" }, { status: 500 });

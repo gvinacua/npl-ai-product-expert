@@ -1,8 +1,8 @@
-# NPL AI Product Expert v4.8
+# NPL AI Product Expert v4.8.1
 
 Internal prototype for a research-led AI product expert speaker/trainer for financial services.
 
-## v4.8 focus
+## v4.8.1 focus
 - Interactive Voice Expert beta using OpenAI Realtime over WebRTC.
 - Cost-aware realtime model selection.
 - Block-level ElevenLabs audio generation remains available for prepared delivery.
@@ -32,3 +32,8 @@ Optional for Interactive Voice Expert:
 
 ## Cost principle
 Use cheap/draft model by default. Use deep/search/voice only when the output is worth it. Keep realtime voice sessions short during testing.
+
+
+## v4.8.1 Realtime fix
+
+Updated the browser voice expert to use the current OpenAI Realtime WebRTC flow: server-side client secret creation via `/v1/realtime/client_secrets` and browser SDP exchange with `/v1/realtime/calls`.

@@ -298,7 +298,7 @@ export default function Home() {
       const session = await sessionRes.json();
       if (!sessionRes.ok) throw new Error(session.error || "Could not create realtime session");
 
-      const ephemeralKey = session.client_secret?.value;
+      const ephemeralKey = session.client_secret?.value || session.value;
       if (!ephemeralKey) throw new Error("Realtime session did not return a client secret.");
 
       const pc = new RTCPeerConnection();
@@ -348,9 +348,10 @@ export default function Home() {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      const sdpRes = await fetch(`https://api.openai.com/v1/realtime?model=${encodeURIComponent(session.model || "gpt-4o-mini-realtime-preview")}`, {
+      setRealtimeStatus("connecting");
+      const sdpRes = await fetch("https://api.openai.com/v1/realtime/calls", {
         method: "POST",
-        body: offer.sdp,
+        body: offer.sdp || "",
         headers: {
           Authorization: `Bearer ${ephemeralKey}`,
           "Content-Type": "application/sdp"
@@ -362,7 +363,6 @@ export default function Home() {
       }
       const answerSdp = await sdpRes.text();
       await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
-      setRealtimeStatus("connecting");
     } catch (e: any) {
       stopRealtimeExpert();
       setRealtimeError(e.message || "Could not start realtime voice expert");
@@ -397,7 +397,7 @@ export default function Home() {
         </div>
         <div className="card build-card">
           <div className="build-topline">
-            <strong>Current build v4.8</strong>
+            <strong>Current build v4.8.1</strong>
             <span className="mini-badge">Interactive voice expert beta</span>
           </div>
           <p className="small">Use cheap models for drafts, deep models only for high-value outputs, and ElevenLabs only for selected voice blocks.</p>
