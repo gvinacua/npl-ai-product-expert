@@ -24,8 +24,12 @@ export async function POST(req: Request) {
     if (!apiKey) return Response.json({ error: "Missing ELEVENLABS_API_KEY" }, { status: 500 });
     if (!voiceId) return Response.json({ error: "Missing ELEVENLABS_VOICE_ID" }, { status: 500 });
 
-    const cleanText = parseText(text).slice(0, 9500);
+    const cleanText = parseText(text);
+    const maxChars = Number(process.env.ELEVENLABS_MAX_CHARS || "3000");
     if (!cleanText) return Response.json({ error: "Missing text to speak" }, { status: 400 });
+    if (cleanText.length > maxChars) {
+      return Response.json({ error: `Text too long for ElevenLabs request: ${cleanText.length} chars. Max allowed by server: ${maxChars}. Select a smaller block or set ELEVENLABS_MAX_CHARS deliberately.` }, { status: 400 });
+    }
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,

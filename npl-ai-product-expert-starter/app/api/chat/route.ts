@@ -38,6 +38,7 @@ export async function POST(req: Request) {
     const deepModel = process.env.OPENAI_DEEP_MODEL || baseModel;
     const searchModel = process.env.OPENAI_SEARCH_MODEL || deepModel;
     const model = webRequested && webEnabled ? searchModel : deepRequested ? deepModel : baseModel;
+    const costProfile = webRequested && webEnabled ? "web/search" : deepRequested ? "deep" : "draft";
 
     const outputTokenBudget: Record<AgentMode, number> = {
       sparring: 650,
@@ -87,7 +88,9 @@ export async function POST(req: Request) {
         model,
         web_requested: webRequested,
         web_enabled: webEnabled,
-        tools: tools.map((t) => t.type)
+        tools: tools.map((t) => t.type),
+        cost_profile: costProfile,
+        max_output_tokens: outputTokenBudget[mode]
       }
     });
   } catch (error: any) {

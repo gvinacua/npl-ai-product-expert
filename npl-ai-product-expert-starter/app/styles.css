@@ -31,3 +31,27 @@ button.full { width: 100%; }
 
 .audio-player { width: 100%; margin: 8px 0 16px; }
 .error-text { color: #9b1c1c; background: #fff1f1; border: 1px solid #ffd6d6; border-radius: 10px; padding: 8px 10px; }
+
+
+/* v4.6 UX additions */
+.compact-header { align-items: stretch; }
+.build-card { max-width: 470px; }
+.build-topline { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+.mini-badge { font-size:12px; padding:5px 8px; border-radius:999px; background:#f1ede3; color:#4f4638; border:1px solid #ded6c7; white-space:nowrap; }
+.delivery-options { display:grid; gap:8px; margin-top:14px; }
+.delivery-options div { border:1px solid #e5e1d8; background:#fbfaf7; border-radius:12px; padding:10px; display:grid; gap:3px; }
+.delivery-options span { color:#666; font-size:13px; }
+.app-shell { display:grid; grid-template-columns: 340px 1fr; gap:18px; align-items:start; }
+.control-card { position: sticky; top: 18px; }
+.output-stack { display:grid; gap:18px; min-width:0; }
+.output-card { min-height: 420px; }
+.mode-hint { margin-top: 6px; }
+.cost-box { border:1px solid #e0d7c8; border-radius:16px; padding:12px; background:#fffaf1; margin:14px 0; }
+.audio-box { border:1px solid #e5e1d8; background:#fbfaf7; border-radius:14px; padding:10px; margin:10px 0 16px; }
+.block-card { background:#fffdf8; }
+.block-list { display:grid; gap:12px; }
+.voice-block { border:1px solid #e5e1d8; background:#fff; border-radius:14px; padding:12px; }
+.voice-block-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.voice-block p { margin:0 0 10px; color:#333; line-height:1.45; font-size:14px; }
+.button-row.left { justify-content:flex-start; }
+@media (max-width: 900px) { .app-shell { grid-template-columns: 1fr; } .control-card { position:static; } .build-card { max-width: none; } }
