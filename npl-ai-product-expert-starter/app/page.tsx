@@ -32,6 +32,31 @@ const starters: Record<string, string> = {
   audit: "Audit the following output against the NPL AI Expert quality rubric. Score it strictly. Identify what is generic, what is missing, what needs verification, and how to rewrite it so it feels like a real expert.\n\nPaste output here:\n"
 };
 
+const modePurpose: Record<string, { phase: string; inputs: string; outputs: string; when: string }> = {
+  speaker: { phase: "Prepare", inputs: "Topic, audience, duration, tone, client context.", outputs: "Talk storyline, speaker script, examples, closing lines.", when: "Use for keynotes and guest-speaker slots." },
+  lesson: { phase: "Prepare", inputs: "Topic, audience, duration, learning goal.", outputs: "Timed class blocks, script, pauses, exercise.", when: "Use for internal drafts of classes." },
+  source_lesson: { phase: "Prepare", inputs: "Topic, audience, duration, required examples or sources.", outputs: "Client-ready lesson with evidence anchors and claims to verify.", when: "Use when material may face a client." },
+  voice_delivery: { phase: "Deliver", inputs: "Short topic, audience and desired tone.", outputs: "Voice-ready blocks, delivery notes, slide cues.", when: "Use to produce speakable segments for ElevenLabs." },
+  training: { phase: "Prepare", inputs: "Client, audience, time available, learning goals.", outputs: "Workshop agenda, exercises, learning path, facilitation notes.", when: "Use for proposals and training design." },
+  panel: { phase: "Converse", inputs: "Panel topic, audience, question or likely questions.", outputs: "Concise 60–90 second answers with nuance.", when: "Use before webinars, panels or exec Q&A." },
+  sparring: { phase: "Converse", inputs: "Idea, assumption or draft position to challenge.", outputs: "Sharp critique, trade-offs, next move.", when: "Use for internal thinking with NPL." },
+  pov: { phase: "Think", inputs: "Topic, audience, evidence you want considered.", outputs: "Main views, trade-offs, provisional NPL position, evidence anchors.", when: "Use to build NPL stance on contested topics." },
+  frontier: { phase: "Research", inputs: "Domain, timeframe, what to monitor.", outputs: "Confirmed shifts, emerging signals, bets, implications.", when: "Use for up-to-date briefings." },
+  research: { phase: "Research", inputs: "What kind of sources/examples/tools you need.", outputs: "Non-obvious sources, examples, weak signals, claims to verify.", when: "Use before upgrading a session." },
+  audit: { phase: "Evaluate", inputs: "Output to audit.", outputs: "Strict quality score, weaknesses, rewrite instructions.", when: "Use before calling something client-ready." }
+};
+
+const workflowCards = [
+  { title: "1. Prepare", text: "Create talks, lessons, training designs and source-backed modules." },
+  { title: "2. Deliver", text: "Turn approved content into voice-ready blocks and audio." },
+  { title: "3. Converse", text: "Rehearse live Q&A with the interactive voice expert." },
+  { title: "4. Evaluate", text: "Audit quality, evidence, nuance and client readiness." }
+];
+
+function phaseClass(phase: string) {
+  return phase.toLowerCase().replace(/[^a-z]/g, "");
+}
+
 function cleanForVoice(text: string) {
   return text
     .replace(/\[[^\]]{0,80}\]\([^\)]{0,220}\)/g, "")
@@ -385,32 +410,41 @@ export default function Home() {
     addRealtimeLog("Voice session stopped");
   }
 
+  const purpose = modePurpose[mode] || modePurpose.voice_delivery;
+
   return (
     <main>
-      <section className="header compact-header">
-        <div>
-          <span className="badge">NPL internal prototype · cost-aware voice build</span>
+      <section className="hero-v49">
+        <div className="hero-copy">
+          <span className="badge">NPL internal prototype · UX cleanup build</span>
           <h1>NPL AI Product Expert</h1>
           <p className="lead">
-            A research-led AI expert speaker and trainer for banks, insurers and financial services teams. This build adds a first interactive voice expert beta, plus cost guardrails and block-level voice delivery.
+            A working console for preparing, delivering and rehearsing AI product training for banks, insurers and financial services teams.
           </p>
         </div>
         <div className="card build-card">
           <div className="build-topline">
-            <strong>Current build v4.8.2</strong>
-            <span className="mini-badge">Interactive voice expert beta</span>
+            <strong>Current build v4.9</strong>
+            <span className="mini-badge">Cleaner console</span>
           </div>
-          <p className="small">Use cheap models for drafts, deep models only for high-value outputs, and ElevenLabs only for selected voice blocks.</p>
-          <div className="delivery-options">
-            <div><strong>1. Prep</strong><span>Generate script, slides, Q&A.</span></div>
-            <div><strong>2. Voice blocks</strong><span>Render selected blocks only.</span></div>
-            <div><strong>3. Live voice beta</strong><span>Interactive Q&A via OpenAI Realtime.</span></div>
+          <p className="small">Choose the outcome, add context, generate the material, then deliver, audit or rehearse it.</p>
+          <div className="workflow-strip">
+            {workflowCards.map((card) => (
+              <div key={card.title}>
+                <strong>{card.title}</strong>
+                <span>{card.text}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="app-shell">
-        <aside className="card control-card">
+      <section className="workspace-v49">
+        <aside className="side-panel card">
+          <div className="step-kicker">Step 1</div>
+          <h2>Choose what you need</h2>
+          <p className="small">The mode carries the quality rules. The request box is only for topic, audience, duration and nuance.</p>
+
           <label>Access password</label>
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="APP_PASSWORD" />
 
@@ -418,54 +452,148 @@ export default function Home() {
           <select value={mode} onChange={e => changeMode(e.target.value)}>
             {modes.map(m => <option value={m.value} key={m.value}>{m.label}</option>)}
           </select>
-          <p className="small mode-hint">{activeMode.hint}</p>
 
-          <div className="cost-box">
-            <strong>Cost guardrails</strong>
-            <p className="small">Mode: {modeCostLabel(activeMode.cost)} · {suggestedModelUse} · {webStatus}</p>
-
-            <div className="cost-proxy-grid">
-              <div>
-                <span className="cost-label">Text estimate</span>
-                <strong>{euro(estimatedTextCost)}</strong>
-                <small>{costBand(estimatedTextCost)} · rough proxy</small>
-              </div>
-              <div>
-                <span className="cost-label">Audio cap</span>
-                <strong>{euro(elevenCostProxy(maxAudioChars).eurProxy)}</strong>
-                <small>{maxAudioChars.toLocaleString()} chars max</small>
-              </div>
-            </div>
-            <p className="small">Estimates are for decision-making, not billing. Prices vary by provider, plan, model and currency.</p>
-
-            <label className="check-label">
-              <input type="checkbox" checked={useDeep} onChange={e => setUseDeep(e.target.checked)} />
-              <span>Use deep model</span>
-            </label>
-            <p className="small">Use for client-ready lessons, PoV, audits and research. Keep off for drafts.</p>
-
-            <label className="check-label">
-              <input type="checkbox" checked={useWeb} onChange={e => setUseWeb(e.target.checked)} />
-              <span>Use web search</span>
-            </label>
-            <p className="small">Use mainly for Research Scout and Frontier Briefing.</p>
-
-            <label>Max ElevenLabs chars</label>
-            <input type="number" min="200" max="5000" step="100" value={maxAudioChars} onChange={(e) => setMaxAudioChars(Number(e.target.value || 1200))} />
-            <p className="small">Default: speak selected text or one block, not the full output. Current cap ≈ {fullAudioProxy.estimatedCredits.toLocaleString()} credits / {euro(fullAudioProxy.eurProxy)} proxy.</p>
+          <div className="mode-card-grid">
+            {modes.map((m) => (
+              <button
+                type="button"
+                key={m.value}
+                className={`mode-card-button ${mode === m.value ? "active" : ""}`}
+                onClick={() => changeMode(m.value)}
+              >
+                <span className={`phase-dot ${phaseClass(modePurpose[m.value]?.phase || "prepare")}`}>{modePurpose[m.value]?.phase || "Prepare"}</span>
+                <strong>{m.label}</strong>
+                <small>{m.hint}</small>
+              </button>
+            ))}
           </div>
-
-          <label>Request</label>
-          <textarea value={prompt} onChange={e => setPrompt(e.target.value)} />
-          <button disabled={loading} onClick={submit}>{loading ? "Thinking…" : "Generate"}</button>
-          <button className="secondary full" type="button" onClick={researchUpgrade}>Research upgrade prompt</button>
         </aside>
 
-        <aside className="card voice-expert-card">
+        <section className="main-panel-v49">
+          <div className="card mode-brief-card">
+            <div className="mode-brief-top">
+              <div>
+                <span className={`phase-pill ${phaseClass(purpose.phase)}`}>{purpose.phase}</span>
+                <h2>{activeMode.label}</h2>
+                <p className="small">{activeMode.hint}</p>
+              </div>
+              <div className="expected-output-box">
+                <strong>Expected output</strong>
+                <p>{purpose.outputs}</p>
+              </div>
+            </div>
+            <div className="mode-brief-grid">
+              <div><strong>What to input</strong><span>{purpose.inputs}</span></div>
+              <div><strong>Best used for</strong><span>{purpose.when}</span></div>
+              <div><strong>Cost posture</strong><span>{modeCostLabel(activeMode.cost)} · {suggestedModelUse} · {webStatus}</span></div>
+            </div>
+          </div>
+
+          <div className="input-output-grid-v49">
+            <section className="card composer-card">
+              <div className="step-kicker">Step 2</div>
+              <h2>Give context</h2>
+              <p className="small">Use short instructions. The mode already enforces source discipline, nuance and financial-services specificity where relevant.</p>
+
+              <label>Request</label>
+              <textarea value={prompt} onChange={e => setPrompt(e.target.value)} />
+
+              <div className="cost-box compact-cost">
+                <strong>Cost guardrails</strong>
+                <div className="cost-proxy-grid">
+                  <div>
+                    <span className="cost-label">Text estimate</span>
+                    <strong>{euro(estimatedTextCost)}</strong>
+                    <small>{costBand(estimatedTextCost)} · rough proxy</small>
+                  </div>
+                  <div>
+                    <span className="cost-label">Audio cap</span>
+                    <strong>{euro(elevenCostProxy(maxAudioChars).eurProxy)}</strong>
+                    <small>{maxAudioChars.toLocaleString()} chars max</small>
+                  </div>
+                </div>
+                <label className="check-label">
+                  <input type="checkbox" checked={useDeep} onChange={e => setUseDeep(e.target.checked)} />
+                  <span>Use deep model</span>
+                </label>
+                <p className="small">Client-ready lessons, PoV, audits and research only. Keep off for drafts.</p>
+
+                <label className="check-label">
+                  <input type="checkbox" checked={useWeb} onChange={e => setUseWeb(e.target.checked)} />
+                  <span>Use web search</span>
+                </label>
+                <p className="small">Use mainly for Research Scout and Frontier Briefing.</p>
+
+                <label>Max ElevenLabs chars</label>
+                <input type="number" min="200" max="5000" step="100" value={maxAudioChars} onChange={(e) => setMaxAudioChars(Number(e.target.value || 1200))} />
+                <p className="small">Default: selected text or one block only. Current cap ≈ {fullAudioProxy.estimatedCredits.toLocaleString()} credits / {euro(fullAudioProxy.eurProxy)} proxy.</p>
+              </div>
+
+              <div className="button-row left composer-actions">
+                <button disabled={loading} onClick={submit}>{loading ? "Thinking…" : "Generate output"}</button>
+                <button className="secondary" type="button" onClick={researchUpgrade}>Research upgrade</button>
+              </div>
+            </section>
+
+            <section className="output-stack-v49">
+              <div className="card output-card">
+                <div className="output-header">
+                  <div>
+                    <div className="step-kicker">Step 3</div>
+                    <strong>Output</strong>
+                    <p className="small">Review, copy, audit, or turn selected blocks into voice. Use audio on selected blocks only.</p>
+                    {meta && <p className="small">Model: {meta.model} · Profile: {meta.cost_profile || "n/a"} · Tools: {(meta.tools || []).join(", ") || "none"} · Web: {String(meta.web_enabled && meta.web_requested)}</p>}
+                    {!!output && <p className="small">Clean voice length: {outputChars.toLocaleString()} chars · Blocks detected: {voiceBlocks.length} · Full-output audio proxy: {euro(elevenCostProxy(outputChars).eurProxy)}</p>}
+                  </div>
+                  <div className="button-row">
+                    <button className="secondary" onClick={copyOutput}>Copy</button>
+                    <button className="secondary" onClick={readOutput}>Browser voice</button>
+                    <button className="secondary" onClick={() => generateElevenLabsAudio()} disabled={audioLoading || !output}>{audioLoading ? "Creating…" : "ElevenLabs selected/full"}</button>
+                    <button className="secondary" onClick={stopVoice}>Stop</button>
+                    <button className="secondary" onClick={auditCurrentOutput}>Audit output</button>
+                  </div>
+                </div>
+                {audioError && <p className="small error-text">{audioError}</p>}
+                {audioUrl && <div className="audio-box"><audio className="audio-player" controls src={audioUrl} /><p className="small">Audio generated from {audioText.length.toLocaleString()} chars · approx. {euro(elevenCostProxy(audioText.length).eurProxy)} proxy.</p></div>}
+                <div className="output">{output || "The generated answer will appear here."}</div>
+              </div>
+
+              {!!voiceBlocks.length && (
+                <div className="card block-card">
+                  <div className="output-header">
+                    <div>
+                      <strong>Voice blocks</strong>
+                      <p className="small">Generate audio for one block at a time. This is the affordable rehearsal workflow.</p>
+                    </div>
+                  </div>
+                  <div className="block-list">
+                    {voiceBlocks.map((block, idx) => (
+                      <div className="voice-block" key={`${idx}-${block.slice(0, 20)}`}>
+                        <div className="voice-block-title">
+                          <strong>Block {idx + 1}</strong>
+                          <span className="small">{block.length} chars · {euro(elevenCostProxy(block.length).eurProxy)}</span>
+                        </div>
+                        <p>{block.length > 280 ? `${block.slice(0, 280)}…` : block}</p>
+                        <div className="button-row left">
+                          <button className="secondary" onClick={() => generateElevenLabsAudio(block)} disabled={audioLoading || block.length > maxAudioChars}>ElevenLabs block</button>
+                          <button className="secondary" onClick={() => speakInChunks(block)}>Browser block</button>
+                          <button className="secondary" onClick={() => copyText(block)}>Copy block</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+        </section>
+
+        <aside className="card voice-expert-card-v49">
+          <div className="step-kicker">Live beta</div>
           <div className="voice-expert-header">
             <div>
-              <strong>Interactive voice expert beta</strong>
-              <p className="small">Live Q&A through OpenAI Realtime. Use for rehearsal and internal demos, not public webinars yet.</p>
+              <strong>Interactive voice expert</strong>
+              <p className="small">Use for rehearsal and internal demos. Not public webinars yet.</p>
             </div>
             <span className={`status-pill ${realtimeStatus === "live" ? "live" : ""}`}>{realtimeStatus}</span>
           </div>
@@ -496,56 +624,6 @@ export default function Home() {
             </div>
           </div>
         </aside>
-
-        <section className="output-stack">
-          <div className="card output-card">
-            <div className="output-header">
-              <div>
-                <strong>Output</strong>
-                <p className="small">Generate the thinking here. Use voice on selected blocks only. Audit when quality matters.</p>
-                {meta && <p className="small">Model: {meta.model} · Profile: {meta.cost_profile || "n/a"} · Tools: {(meta.tools || []).join(", ") || "none"} · Web: {String(meta.web_enabled && meta.web_requested)}</p>}
-                {!!output && <p className="small">Clean voice length: {outputChars.toLocaleString()} chars · Blocks detected: {voiceBlocks.length} · Full-output audio proxy: {euro(elevenCostProxy(outputChars).eurProxy)}</p>}
-              </div>
-              <div className="button-row">
-                <button className="secondary" onClick={copyOutput}>Copy</button>
-                <button className="secondary" onClick={readOutput}>Browser voice</button>
-                <button className="secondary" onClick={() => generateElevenLabsAudio()} disabled={audioLoading || !output}>{audioLoading ? "Creating…" : "ElevenLabs selected/full"}</button>
-                <button className="secondary" onClick={stopVoice}>Stop</button>
-                <button className="secondary" onClick={auditCurrentOutput}>Audit current output</button>
-              </div>
-            </div>
-            {audioError && <p className="small error-text">{audioError}</p>}
-            {audioUrl && <div className="audio-box"><audio className="audio-player" controls src={audioUrl} /><p className="small">Audio generated from {audioText.length.toLocaleString()} chars · approx. {euro(elevenCostProxy(audioText.length).eurProxy)} proxy.</p></div>}
-            <div className="output">{output || "The generated answer will appear here."}</div>
-          </div>
-
-          {!!voiceBlocks.length && (
-            <div className="card block-card">
-              <div className="output-header">
-                <div>
-                  <strong>Voice blocks</strong>
-                  <p className="small">Use these for affordable rehearsal: generate audio for one block at a time.</p>
-                </div>
-              </div>
-              <div className="block-list">
-                {voiceBlocks.map((block, idx) => (
-                  <div className="voice-block" key={`${idx}-${block.slice(0, 20)}`}>
-                    <div className="voice-block-title">
-                      <strong>Block {idx + 1}</strong>
-                      <span className="small">{block.length} chars · {euro(elevenCostProxy(block.length).eurProxy)}</span>
-                    </div>
-                    <p>{block.length > 280 ? `${block.slice(0, 280)}…` : block}</p>
-                    <div className="button-row left">
-                      <button className="secondary" onClick={() => generateElevenLabsAudio(block)} disabled={audioLoading || block.length > maxAudioChars}>ElevenLabs block</button>
-                      <button className="secondary" onClick={() => speakInChunks(block)}>Browser block</button>
-                      <button className="secondary" onClick={() => copyText(block)}>Copy block</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
       </section>
     </main>
   );

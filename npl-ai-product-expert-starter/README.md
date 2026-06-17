@@ -1,4 +1,6 @@
-# NPL AI Product Expert v4.8.2
+# NPL AI Product Expert
+
+Current build: v4.9 — UX/UI cleanup and clearer delivery console v4.8.2
 
 Internal prototype for a research-led AI product expert speaker/trainer for financial services.
 
