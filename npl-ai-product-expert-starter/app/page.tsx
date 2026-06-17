@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 type ModeDef = { value: string; label: string; hint: string; cost: "low" | "medium" | "high" };
 
@@ -158,6 +158,15 @@ export default function Home() {
   const [audioError, setAudioError] = useState("");
   const [audioText, setAudioText] = useState("");
   const [maxAudioChars, setMaxAudioChars] = useState(1200);
+  const [realtimeStatus, setRealtimeStatus] = useState("idle");
+  const [realtimeError, setRealtimeError] = useState("");
+  const [realtimeLog, setRealtimeLog] = useState<string[]>([]);
+  const [realtimeContext, setRealtimeContext] = useState("You are joining a live internal rehearsal as the NPL AI Product Expert. Answer audience questions about AI products, adoption, governance and agents in financial services. Keep answers to 45-90 seconds.");
+  const [useRealtimeDeep, setUseRealtimeDeep] = useState(false);
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const dcRef = useRef<RTCDataChannel | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const activeMode = modes.find((m) => m.value === mode) || modes[0];
   const voiceBlocks = useMemo(() => splitVoiceBlocks(output), [output]);
@@ -272,6 +281,110 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function addRealtimeLog(line: string) {
+    setRealtimeLog((prev) => [`${new Date().toLocaleTimeString()} · ${line}`, ...prev].slice(0, 8));
+  }
+
+  async function startRealtimeExpert() {
+    if (pcRef.current) return;
+    setRealtimeError("");
+    setRealtimeStatus("requesting microphone");
+    try {
+      const sessionRes = await fetch("/api/realtime-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password, context: realtimeContext, useDeep: useRealtimeDeep })
+      });
+      const session = await sessionRes.json();
+      if (!sessionRes.ok) throw new Error(session.error || "Could not create realtime session");
+
+      const ephemeralKey = session.client_secret?.value;
+      if (!ephemeralKey) throw new Error("Realtime session did not return a client secret.");
+
+      const pc = new RTCPeerConnection();
+      pcRef.current = pc;
+
+      pc.ontrack = (event) => {
+        if (remoteAudioRef.current) {
+          remoteAudioRef.current.srcObject = event.streams[0];
+          remoteAudioRef.current.play().catch(() => undefined);
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStreamRef.current = stream;
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+      const dc = pc.createDataChannel("oai-events");
+      dcRef.current = dc;
+      dc.onopen = () => {
+        setRealtimeStatus("live");
+        addRealtimeLog(`Live voice session started · model ${session.model || "realtime"} · voice ${session.voice || "default"}`);
+        dc.send(JSON.stringify({
+          type: "response.create",
+          response: {
+            instructions: "Start with one short greeting. Ask what the operator wants to rehearse or what question the audience has.",
+            modalities: ["audio", "text"]
+          }
+        }));
+      };
+      dc.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === "conversation.item.input_audio_transcription.completed" && msg.transcript) {
+            addRealtimeLog(`You: ${msg.transcript}`);
+          }
+          if ((msg.type === "response.audio_transcript.done" || msg.type === "response.output_text.done") && (msg.transcript || msg.text)) {
+            addRealtimeLog(`Expert: ${msg.transcript || msg.text}`);
+          }
+          if (msg.type === "error") {
+            setRealtimeError(msg.error?.message || "Realtime API error");
+          }
+        } catch {
+          // Ignore non-JSON realtime events.
+        }
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      const sdpRes = await fetch(`https://api.openai.com/v1/realtime?model=${encodeURIComponent(session.model || "gpt-4o-mini-realtime-preview")}`, {
+        method: "POST",
+        body: offer.sdp,
+        headers: {
+          Authorization: `Bearer ${ephemeralKey}`,
+          "Content-Type": "application/sdp"
+        }
+      });
+      if (!sdpRes.ok) {
+        const text = await sdpRes.text();
+        throw new Error(text || "Realtime WebRTC connection failed");
+      }
+      const answerSdp = await sdpRes.text();
+      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+      setRealtimeStatus("connecting");
+    } catch (e: any) {
+      stopRealtimeExpert();
+      setRealtimeError(e.message || "Could not start realtime voice expert");
+      setRealtimeStatus("error");
+    }
+  }
+
+  function stopRealtimeExpert() {
+    try {
+      dcRef.current?.close();
+      pcRef.current?.close();
+      localStreamRef.current?.getTracks().forEach((track) => track.stop());
+    } catch {
+      // Ignore cleanup errors.
+    }
+    dcRef.current = null;
+    pcRef.current = null;
+    localStreamRef.current = null;
+    setRealtimeStatus("idle");
+    addRealtimeLog("Voice session stopped");
+  }
+
   return (
     <main>
       <section className="header compact-header">
@@ -279,19 +392,19 @@ export default function Home() {
           <span className="badge">NPL internal prototype · cost-aware voice build</span>
           <h1>NPL AI Product Expert</h1>
           <p className="lead">
-            A research-led AI expert speaker and trainer for banks, insurers and financial services teams. This build adds cost guardrails and block-level voice delivery.
+            A research-led AI expert speaker and trainer for banks, insurers and financial services teams. This build adds a first interactive voice expert beta, plus cost guardrails and block-level voice delivery.
           </p>
         </div>
         <div className="card build-card">
           <div className="build-topline">
-            <strong>Current build v4.7</strong>
-            <span className="mini-badge">Cost proxy + block voice UX</span>
+            <strong>Current build v4.8</strong>
+            <span className="mini-badge">Interactive voice expert beta</span>
           </div>
           <p className="small">Use cheap models for drafts, deep models only for high-value outputs, and ElevenLabs only for selected voice blocks.</p>
           <div className="delivery-options">
             <div><strong>1. Prep</strong><span>Generate script, slides, Q&A.</span></div>
             <div><strong>2. Voice blocks</strong><span>Render selected blocks only.</span></div>
-            <div><strong>3. Voice expert next</strong><span>Interactive Q&A via Vapi/OpenAI Realtime.</span></div>
+            <div><strong>3. Live voice beta</strong><span>Interactive Q&A via OpenAI Realtime.</span></div>
           </div>
         </div>
       </section>
@@ -346,6 +459,42 @@ export default function Home() {
           <textarea value={prompt} onChange={e => setPrompt(e.target.value)} />
           <button disabled={loading} onClick={submit}>{loading ? "Thinking…" : "Generate"}</button>
           <button className="secondary full" type="button" onClick={researchUpgrade}>Research upgrade prompt</button>
+        </aside>
+
+        <aside className="card voice-expert-card">
+          <div className="voice-expert-header">
+            <div>
+              <strong>Interactive voice expert beta</strong>
+              <p className="small">Live Q&A through OpenAI Realtime. Use for rehearsal and internal demos, not public webinars yet.</p>
+            </div>
+            <span className={`status-pill ${realtimeStatus === "live" ? "live" : ""}`}>{realtimeStatus}</span>
+          </div>
+
+          <label>Live session context</label>
+          <textarea className="small-textarea" value={realtimeContext} onChange={(e) => setRealtimeContext(e.target.value)} />
+
+          <label className="check-label">
+            <input type="checkbox" checked={useRealtimeDeep} onChange={e => setUseRealtimeDeep(e.target.checked)} />
+            <span>Use stronger realtime model</span>
+          </label>
+          <p className="small">Default should be the cheaper realtime model. Use stronger only for important rehearsals.</p>
+
+          <div className="button-row left">
+            <button type="button" onClick={startRealtimeExpert} disabled={realtimeStatus !== "idle" && realtimeStatus !== "error"}>Start voice expert</button>
+            <button className="secondary" type="button" onClick={stopRealtimeExpert}>Stop</button>
+          </div>
+
+          <audio ref={remoteAudioRef} autoPlay className="hidden-audio" />
+          {realtimeError && <p className="small error-text">{realtimeError}</p>}
+
+          <div className="realtime-notes">
+            <strong>How to use</strong>
+            <p className="small">Ask one question at a time. Interrupt if needed. Keep sessions short while testing cost and quality.</p>
+            <strong>Recent transcript/events</strong>
+            <div className="realtime-log">
+              {realtimeLog.length ? realtimeLog.map((line, i) => <p className="small" key={`${i}-${line}`}>{line}</p>) : <p className="small">No live events yet.</p>}
+            </div>
+          </div>
         </aside>
 
         <section className="output-stack">
