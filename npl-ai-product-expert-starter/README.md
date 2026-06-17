@@ -77,7 +77,12 @@ This version corrects the expert's adoption thesis. It should no longer frame br
 This version strengthens evidence discipline across modes: source links/anchors, claim status for named cases, what is confirmed/inferred/to verify, and stronger Point-of-View evidence requirements.
 
 
-## v4.5.1 deploy fix
+## v4.5.2 deploy fix
 - Removed package-lock.json from the package to avoid registry URL lock issues.
 - Removed unused @openai/agents and tsx dependencies.
 - Pinned deployment dependencies for more stable Vercel builds.
+
+
+## v4.5.2
+- Updated Next.js to 16.1.5 and React/React DOM to 19.2.0 to satisfy Vercel security deployment checks.
+- Kept ElevenLabs voice layer and stable dependencies.
