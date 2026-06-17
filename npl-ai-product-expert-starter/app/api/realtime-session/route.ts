@@ -38,8 +38,8 @@ export async function POST(req: Request) {
     }
 
     const model = parseBool(useDeep)
-      ? (process.env.OPENAI_REALTIME_DEEP_MODEL || process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2")
-      : (process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2");
+      ? (process.env.OPENAI_REALTIME_DEEP_MODEL || process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-mini")
+      : (process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-mini");
     const voice = process.env.OPENAI_REALTIME_VOICE || "marin";
 
     const instructions = `${buildInstructions("panel")}
@@ -61,6 +61,7 @@ ${typeof context === "string" && context.trim() ? context.trim().slice(0, 3000) 
           type: "realtime",
           model,
           instructions,
+          output_modalities: ["audio"],
           audio: {
             output: { voice },
             input: {

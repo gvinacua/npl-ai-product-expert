@@ -324,7 +324,7 @@ export default function Home() {
           type: "response.create",
           response: {
             instructions: "Start with one short greeting. Ask what the operator wants to rehearse or what question the audience has.",
-            modalities: ["audio", "text"]
+            output_modalities: ["audio"]
           }
         }));
       };
@@ -397,7 +397,7 @@ export default function Home() {
         </div>
         <div className="card build-card">
           <div className="build-topline">
-            <strong>Current build v4.8.1</strong>
+            <strong>Current build v4.8.2</strong>
             <span className="mini-badge">Interactive voice expert beta</span>
           </div>
           <p className="small">Use cheap models for drafts, deep models only for high-value outputs, and ElevenLabs only for selected voice blocks.</p>
