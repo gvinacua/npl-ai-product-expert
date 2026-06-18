@@ -2,59 +2,129 @@
 
 import { useMemo, useRef, useState } from "react";
 
-type ModeDef = { value: string; label: string; hint: string; cost: "low" | "medium" | "high" };
+type JobId = "build" | "talk" | "deliver";
+type AgentMode = "speaker" | "lesson" | "source_lesson" | "voice_delivery" | "training" | "panel" | "sparring" | "frontier" | "research" | "audit" | "pov";
 
-const modes: ModeDef[] = [
-  { value: "speaker", label: "Speaker Mode", hint: "Keynotes, talks, storylines and speaker notes", cost: "medium" },
-  { value: "lesson", label: "Lesson Delivery Mode", hint: "Timed class scripts, blocks, pauses and exercises", cost: "medium" },
-  { value: "source_lesson", label: "Source-Grounded Lesson Builder", hint: "Client-ready lessons built around verified examples", cost: "high" },
-  { value: "voice_delivery", label: "Voice Delivery Prep", hint: "Short voice-ready blocks for TTS or live delivery", cost: "low" },
-  { value: "training", label: "Training Designer", hint: "Corporate workshops, exercises and learning paths", cost: "medium" },
-  { value: "panel", label: "Panel / Q&A Expert", hint: "Sharp answers for webinars and executive Q&A", cost: "low" },
-  { value: "sparring", label: "AI Sparring Partner", hint: "Challenge ideas, rehearse, refine thinking", cost: "low" },
-  { value: "pov", label: "Point-of-View Builder", hint: "Compare approaches and shape the NPL position", cost: "high" },
-  { value: "frontier", label: "Frontier Briefing", hint: "Current signals, upcoming shifts and implications", cost: "high" },
-  { value: "research", label: "Research Scout", hint: "Find less obvious sources, tools and examples", cost: "high" },
-  { value: "audit", label: "Expertise Audit", hint: "Score depth, originality, evidence and expert quality", cost: "medium" }
-];
-
-const starters: Record<string, string> = {
-  speaker: "Create a 25-minute guest speaker talk for a financial services audience on: From AI tools to AI products. Audience: mixed banking and insurance. Duration: 25 minutes. Emphasis: nuanced adoption-to-product pathway.",
-  lesson: "Create a 35-minute interactive class for banking and insurance teams on: How to design AI products that survive production. Audience: product, data/AI, innovation, compliance, risk and transformation. Keep it concise and spoken.",
-  source_lesson: "Build a client-ready 35-minute lesson on: From AI tools to AI products in financial services. Use source-grounded examples. Audience: banking and insurance. Include claims to verify.",
-  voice_delivery: "Prepare a 60-second spoken opening for a financial services AI training session. Topic: from AI tools to AI products. Audience: banking and insurance leaders. Make it concise, senior, nuanced and non-hype.",
-  training: "Design a half-day training for a bank or insurer on how to identify, design, test and manage AI products. Audience: mixed business, product, data/AI and risk teams.",
-  panel: "Prepare concise panel answers on AI adoption, AI product management, agents, risk and governance in financial services. Use nuance and examples. Avoid generic answers.",
-  sparring: "Challenge our current thinking on: building an AI Expert Speaker for financial services training. Focus on expertise, differentiation, source discipline and delivery.",
-  pov: "Develop an NPL point of view on this topic: AI adoption vs AI product discipline in banks and insurers. Compare approaches, evidence, uncertainty and practical implications. Include evidence anchors and claims to verify.",
-  frontier: "Brief us on what is changing now in AI agents, voice interfaces and AI products for financial services. Separate confirmed shifts, emerging signals, speculative bets, implications for NPL training, and what to monitor next.",
-  research: "Find sources, tools, examples or weak signals that could make an AI product training program for banks and insurers feel genuinely fresh. Prioritize non-obvious but credible material and classify confidence.",
-  audit: "Audit the following output against the NPL AI Expert quality rubric. Score it strictly. Identify what is generic, what is missing, what needs verification, and how to rewrite it so it feels like a real expert.\n\nPaste output here:\n"
+type ActionDef = {
+  id: string;
+  job: JobId;
+  label: string;
+  mode: AgentMode;
+  description: string;
+  placeholder: string;
+  defaultDeep?: boolean;
+  defaultWeb?: boolean;
+  outputHint: string;
 };
 
-const modePurpose: Record<string, { phase: string; inputs: string; outputs: string; when: string }> = {
-  speaker: { phase: "Prepare", inputs: "Topic, audience, duration, tone, client context.", outputs: "Talk storyline, speaker script, examples, closing lines.", when: "Use for keynotes and guest-speaker slots." },
-  lesson: { phase: "Prepare", inputs: "Topic, audience, duration, learning goal.", outputs: "Timed class blocks, script, pauses, exercise.", when: "Use for internal drafts of classes." },
-  source_lesson: { phase: "Prepare", inputs: "Topic, audience, duration, required examples or sources.", outputs: "Client-ready lesson with evidence anchors and claims to verify.", when: "Use when material may face a client." },
-  voice_delivery: { phase: "Deliver", inputs: "Short topic, audience and desired tone.", outputs: "Voice-ready blocks, delivery notes, slide cues.", when: "Use to produce speakable segments for ElevenLabs." },
-  training: { phase: "Prepare", inputs: "Client, audience, time available, learning goals.", outputs: "Workshop agenda, exercises, learning path, facilitation notes.", when: "Use for proposals and training design." },
-  panel: { phase: "Converse", inputs: "Panel topic, audience, question or likely questions.", outputs: "Concise 60–90 second answers with nuance.", when: "Use before webinars, panels or exec Q&A." },
-  sparring: { phase: "Converse", inputs: "Idea, assumption or draft position to challenge.", outputs: "Sharp critique, trade-offs, next move.", when: "Use for internal thinking with NPL." },
-  pov: { phase: "Think", inputs: "Topic, audience, evidence you want considered.", outputs: "Main views, trade-offs, provisional NPL position, evidence anchors.", when: "Use to build NPL stance on contested topics." },
-  frontier: { phase: "Research", inputs: "Domain, timeframe, what to monitor.", outputs: "Confirmed shifts, emerging signals, bets, implications.", when: "Use for up-to-date briefings." },
-  research: { phase: "Research", inputs: "What kind of sources/examples/tools you need.", outputs: "Non-obvious sources, examples, weak signals, claims to verify.", when: "Use before upgrading a session." },
-  audit: { phase: "Evaluate", inputs: "Output to audit.", outputs: "Strict quality score, weaknesses, rewrite instructions.", when: "Use before calling something client-ready." }
+const jobs: Record<JobId, { title: string; tagline: string; description: string }> = {
+  build: {
+    title: "Build a learning asset",
+    tagline: "Create client material",
+    description: "Prepare a session, module, keynote, proposal section, source pack or Q&A bank for a specific training objective."
+  },
+  talk: {
+    title: "Talk with the expert",
+    tagline: "Discuss, debate, challenge",
+    description: "Interact with the AI expert as a specialist in a conversation, panel or strategic discussion. Use text or live voice."
+  },
+  deliver: {
+    title: "Deliver / activate",
+    tagline: "Use it with an audience",
+    description: "Turn prepared content into spoken blocks, live Q&A support, presenter notes, slide cues and voice delivery."
+  }
 };
 
-const workflowCards = [
-  { title: "1. Prepare", text: "Create talks, lessons, training designs and source-backed modules." },
-  { title: "2. Deliver", text: "Turn approved content into voice-ready blocks and audio." },
-  { title: "3. Converse", text: "Rehearse live Q&A with the interactive voice expert." },
-  { title: "4. Evaluate", text: "Audit quality, evidence, nuance and client readiness." }
+const actions: ActionDef[] = [
+  {
+    id: "session",
+    job: "build",
+    label: "Session / module",
+    mode: "source_lesson",
+    defaultDeep: true,
+    description: "Best for client-facing classes and training modules.",
+    placeholder: "Topic: From AI tools to AI products in financial services.\nAudience: mixed banking and insurance teams.\nDuration: 35 minutes.\nObjective: help participants distinguish adoption, tools, workflows and AI products.\nNuance: use real examples where possible and mark claims to verify.",
+    outputHint: "Create a source-grounded learning asset. Include thesis, agenda, spoken blocks, exercise, evidence anchors, claims to verify and suggested next iteration."
+  },
+  {
+    id: "proposal",
+    job: "build",
+    label: "Proposal / programme",
+    mode: "training",
+    description: "Best for shaping a client programme or commercial proposal.",
+    placeholder: "Client/context: financial-services company exploring AI training.\nNeed: programme to help teams design, build and manage AI products.\nFormat: 2 half-day workshops plus optional voice expert.\nTone: concise, premium, practical.",
+    outputHint: "Create a practical programme/proposal asset with objectives, modules, outputs, delivery format and assumptions."
+  },
+  {
+    id: "source-pack",
+    job: "build",
+    label: "Source pack",
+    mode: "research",
+    defaultDeep: true,
+    defaultWeb: true,
+    description: "Best for finding sources, cases and weak signals before building content.",
+    placeholder: "Research need: find recent and less obvious sources, examples and tools to enrich an AI product training programme for banks and insurers.\nFocus: agents, governance, evaluation, voice interfaces, operating model, adoption-to-product transition.",
+    outputHint: "Return a selective source pack with links where possible, what each source supports, confidence, how to use in training and claims to verify."
+  },
+  {
+    id: "pov",
+    job: "talk",
+    label: "Build a point of view",
+    mode: "pov",
+    defaultDeep: true,
+    description: "Best for shaping NPL's position on contested AI topics.",
+    placeholder: "Topic: Bottom-up AI adoption vs AI product discipline in banking and insurance.\nAudience: senior innovation, product, data, risk and compliance leaders.\nNeed: concise NPL position with evidence anchors and uncertainty.",
+    outputHint: "Compare approaches before taking a position. Include evidence anchors, uncertainty, NPL provisional view and a senior-audience challenge question."
+  },
+  {
+    id: "panel-answer",
+    job: "talk",
+    label: "Panel answer",
+    mode: "panel",
+    description: "Best for 60–90 second responses to audience or moderator questions.",
+    placeholder: "Question: Why is bottom-up AI adoption not enough, but still important in banking?\nAudience: senior financial-services leaders.\nTone: concise, nuanced, practical.",
+    outputHint: "Give a concise expert answer with direct view, nuance, evidence caveat, example if safe and a memorable closing line."
+  },
+  {
+    id: "challenge",
+    job: "talk",
+    label: "Challenge my thinking",
+    mode: "sparring",
+    description: "Best for quick pushback and sharper framing.",
+    placeholder: "Idea to challenge: We should position the AI expert as a synthetic speaker for corporate AI training.\nWhat feels weak, what is promising, and what should we do next?",
+    outputHint: "Challenge constructively. Keep it short: thesis, 3 bullets and one recommendation."
+  },
+  {
+    id: "voice-blocks",
+    job: "deliver",
+    label: "Voice blocks",
+    mode: "voice_delivery",
+    description: "Best for preparing text that can be spoken by ElevenLabs or a live expert.",
+    placeholder: "Prepare a 2-minute spoken opening for a financial services AI training session.\nTopic: From AI tools to AI products.\nAudience: banking and insurance leaders.\nStyle: concise, senior, nuanced, non-hype.\nStructure: 3 short spoken blocks.",
+    outputHint: "Create short speakable blocks with delivery notes and optional slide cues. Make it natural for voice."
+  },
+  {
+    id: "live-qa",
+    job: "deliver",
+    label: "Live Q&A support",
+    mode: "panel",
+    description: "Best for preparing answer patterns and guardrails for a session.",
+    placeholder: "Session context: AI product training for banking and insurance teams.\nLikely audience questions: governance, adoption, agents, risk, productivity, build vs buy.\nNeed: concise answer patterns and safe-to-say / verify-first guidance.",
+    outputHint: "Prepare concise Q&A support: likely questions, 60-second answers, what to verify, and safe fallback language."
+  },
+  {
+    id: "speaker-console",
+    job: "deliver",
+    label: "Delivery console pack",
+    mode: "voice_delivery",
+    description: "Best for turning a session into operator-ready blocks.",
+    placeholder: "Existing session/topic: From AI tools to AI products in financial services.\nNeed: operator-ready delivery blocks with slide cues, pauses, voice notes and Q&A handoff moments.\nDuration: 10 minutes.",
+    outputHint: "Turn the brief into operator-ready delivery blocks: spoken text, timing, slide cue, audience pause and evidence warning if needed."
+  }
 ];
 
-function phaseClass(phase: string) {
-  return phase.toLowerCase().replace(/[^a-z]/g, "");
+function getActionsFor(job: JobId) {
+  return actions.filter((a) => a.job === job);
 }
 
 function cleanForVoice(text: string) {
@@ -63,29 +133,6 @@ function cleanForVoice(text: string) {
     .replace(/[#*_>`]/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-}
-
-function speakInChunks(text: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const chunks = cleanForVoice(text)
-    .split(/\n\n+/)
-    .map((chunk) => chunk.trim())
-    .filter(Boolean)
-    .slice(0, 20);
-
-  chunks.forEach((chunk) => {
-    const utterance = new SpeechSynthesisUtterance(chunk);
-    utterance.lang = "en-US";
-    utterance.rate = 0.92;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
-  });
-}
-
-function getSelectionText() {
-  if (typeof window === "undefined") return "";
-  return window.getSelection()?.toString().trim() || "";
 }
 
 function splitVoiceBlocks(text: string) {
@@ -110,13 +157,26 @@ function splitVoiceBlocks(text: string) {
       if (current) blocks.push(current.trim());
     }
   }
-  return blocks.slice(0, 12);
+  return blocks.slice(0, 10);
 }
 
-function modeCostLabel(cost: ModeDef["cost"]) {
-  if (cost === "low") return "Low-cost default";
-  if (cost === "medium") return "Medium";
-  return "High-value / use deep selectively";
+function speakText(text: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(cleanForVoice(text));
+  utterance.lang = "en-US";
+  utterance.rate = 0.92;
+  utterance.pitch = 1;
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopBrowserVoice() {
+  if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+}
+
+function getSelectionText() {
+  if (typeof window === "undefined") return "";
+  return window.getSelection()?.toString().trim() || "";
 }
 
 function estimateTokens(text: string) {
@@ -124,36 +184,32 @@ function estimateTokens(text: string) {
 }
 
 function euro(amount: number) {
+  if (amount <= 0) return "€0";
   if (amount < 0.01) return "<€0.01";
   return `~€${amount.toFixed(amount < 1 ? 2 : 1)}`;
 }
 
 function costBand(amount: number) {
-  if (amount < 0.05) return "Low";
-  if (amount < 0.50) return "Medium";
-  return "High";
+  if (amount < 0.05) return "low";
+  if (amount < 0.50) return "medium";
+  return "high";
 }
 
 function modelCostProxy(modelLabel: string, inputTokens: number, maxOutputTokens: number, web: boolean) {
-  // Approximate EUR proxy only. Update these assumptions as provider pricing changes.
   const model = (modelLabel || "").toLowerCase();
-  const rates = model.includes("mini")
+  const rates = model.includes("mini") || model.includes("draft")
     ? { inputPer1M: 0.15, outputPer1M: 0.60 }
     : { inputPer1M: 2.00, outputPer1M: 8.00 };
   const base = (inputTokens * rates.inputPer1M + maxOutputTokens * rates.outputPer1M) / 1_000_000;
-  const webPremium = web ? 0.02 : 0;
-  return base + webPremium;
+  return base + (web ? 0.02 : 0);
 }
 
 function elevenCostProxy(chars: number) {
-  // ElevenLabs plans/pricing vary. This is a rough planning proxy, not billing truth.
-  const estimatedCredits = chars;
-  const eurProxy = chars * 0.00018;
-  return { estimatedCredits, eurProxy };
+  return { estimatedCredits: chars, eurProxy: chars * 0.00018 };
 }
 
-function estimatedOutputBudget(modeValue: string) {
-  const budgets: Record<string, number> = {
+function estimatedOutputBudget(mode: AgentMode) {
+  const budgets: Record<AgentMode, number> = {
     sparring: 650,
     panel: 700,
     pov: 1200,
@@ -166,105 +222,123 @@ function estimatedOutputBudget(modeValue: string) {
     voice_delivery: 1800,
     research: 3000
   };
-  return budgets[modeValue] || 1600;
+  return budgets[mode] || 1600;
+}
+
+function buildPrompt(action: ActionDef, brief: string, depth: string) {
+  return `JOB TO BE DONE: ${jobs[action.job].title}\nTASK: ${action.label}\nDEPTH: ${depth}\n\nUSER BRIEF:\n${brief}\n\nOUTPUT REQUIREMENTS:\n${action.outputHint}\n\nKeep the output useful and concise. Add evidence / claims-to-verify only where relevant. Do not invent named company cases.`;
 }
 
 export default function Home() {
-  const [mode, setMode] = useState("voice_delivery");
-  const [prompt, setPrompt] = useState(starters.voice_delivery);
+  const [job, setJob] = useState<JobId>("build");
+  const [actionId, setActionId] = useState("session");
+  const [brief, setBrief] = useState(actions[0].placeholder);
   const [password, setPassword] = useState("");
+  const [depth, setDepth] = useState("client-ready draft");
+  const [useWeb, setUseWeb] = useState(false);
+  const [useDeep, setUseDeep] = useState(true);
   const [output, setOutput] = useState("");
+  const [qualityNote, setQualityNote] = useState("");
   const [meta, setMeta] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [useWeb, setUseWeb] = useState(false);
-  const [useDeep, setUseDeep] = useState(false);
+  const [qualityLoading, setQualityLoading] = useState(false);
   const [audioLoading, setAudioLoading] = useState(false);
   const [audioUrl, setAudioUrl] = useState("");
   const [audioError, setAudioError] = useState("");
   const [audioText, setAudioText] = useState("");
   const [maxAudioChars, setMaxAudioChars] = useState(1200);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [realtimeStatus, setRealtimeStatus] = useState("idle");
   const [realtimeError, setRealtimeError] = useState("");
   const [realtimeLog, setRealtimeLog] = useState<string[]>([]);
-  const [realtimeContext, setRealtimeContext] = useState("You are joining a live internal rehearsal as the NPL AI Product Expert. Answer audience questions about AI products, adoption, governance and agents in financial services. Keep answers to 45-90 seconds.");
+  const [realtimeContext, setRealtimeContext] = useState("You are joining a strategic conversation as the NPL AI Product Expert. Answer questions about AI products, adoption, governance, agents and financial services. Keep answers concise: 45-90 seconds.");
   const [useRealtimeDeep, setUseRealtimeDeep] = useState(false);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const activeMode = modes.find((m) => m.value === mode) || modes[0];
+  const currentAction = actions.find((a) => a.id === actionId) || actions[0];
+  const availableActions = getActionsFor(job);
+  const generatedPrompt = buildPrompt(currentAction, brief, depth);
+  const estimatedTextCost = modelCostProxy(useDeep ? "deep model" : "draft mini", estimateTokens(generatedPrompt), estimatedOutputBudget(currentAction.mode), useWeb);
   const voiceBlocks = useMemo(() => splitVoiceBlocks(output), [output]);
   const outputChars = cleanForVoice(output).length;
-  const suggestedModelUse = useDeep ? "Deep model on" : "Draft model on";
-  const webStatus = useWeb ? "Web requested" : "Local knowledge only";
-  const estimatedInputTokens = estimateTokens(prompt);
-  const estimatedMaxOutputTokens = estimatedOutputBudget(mode);
-  const modelProxyName = useDeep ? "deep model" : "gpt-4.1-mini/draft";
-  const estimatedTextCost = modelCostProxy(modelProxyName, estimatedInputTokens, estimatedMaxOutputTokens, useWeb);
-  const fullAudioProxy = elevenCostProxy(Math.min(outputChars || 0, maxAudioChars));
 
-  function changeMode(next: string) {
-    setMode(next);
-    setPrompt(starters[next]);
-    if (["source_lesson", "pov", "frontier", "research"].includes(next)) setUseDeep(true);
-    if (!["frontier", "research"].includes(next)) setUseWeb(false);
+  function changeJob(nextJob: JobId) {
+    const first = getActionsFor(nextJob)[0];
+    setJob(nextJob);
+    setActionId(first.id);
+    setBrief(first.placeholder);
+    setUseDeep(Boolean(first.defaultDeep));
+    setUseWeb(Boolean(first.defaultWeb));
+    setOutput("");
+    setQualityNote("");
+    setMeta(null);
   }
 
-  async function submit() {
+  function changeAction(nextActionId: string) {
+    const next = actions.find((a) => a.id === nextActionId) || actions[0];
+    setActionId(next.id);
+    setBrief(next.placeholder);
+    setUseDeep(Boolean(next.defaultDeep));
+    setUseWeb(Boolean(next.defaultWeb));
+    setQualityNote("");
+  }
+
+  async function runAction() {
     setLoading(true);
     setOutput("");
+    setQualityNote("");
     setMeta(null);
     setAudioUrl("");
     setAudioError("");
-    setAudioText("");
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, prompt, password, useWeb, useDeep })
+        body: JSON.stringify({ mode: currentAction.mode, prompt: generatedPrompt, password, useWeb, useDeep })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Request failed");
-      setOutput(data.output);
+      setOutput(data.output || "");
       setMeta(data.meta || null);
     } catch (e: any) {
-      setOutput(`Error: ${e.message}`);
+      setOutput(`Error: ${e.message || "Something went wrong"}`);
     } finally {
       setLoading(false);
     }
   }
 
-  function copyOutput() {
-    navigator.clipboard.writeText(output || "");
-  }
-
-  function copyText(text: string) {
-    navigator.clipboard.writeText(text || "");
-  }
-
-  function readOutput() {
-    if (!output) return;
-    const selected = getSelectionText();
-    speakInChunks(selected || output);
-  }
-
-  function stopVoice() {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
+  async function runQualityCheck() {
+    if (!output.trim()) return;
+    setQualityLoading(true);
+    setQualityNote("");
+    try {
+      const prompt = `Audit this output as a transversal quality layer for NPL. Be concise. Return: score /10, client-readiness, evidence status, key weakness, and next improvement.\n\nOUTPUT:\n${output}`;
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "audit", prompt, password, useWeb: false, useDeep: true })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Audit failed");
+      setQualityNote(data.output || "");
+    } catch (e: any) {
+      setQualityNote(`Audit error: ${e.message || "Something went wrong"}`);
+    } finally {
+      setQualityLoading(false);
     }
   }
 
-  async function generateElevenLabsAudio(textOverride?: string) {
+  async function generateElevenLabsAudio(text?: string) {
     const selected = getSelectionText();
-    const sourceText = cleanForVoice(textOverride || selected || output);
-    if (!sourceText) return;
-
+    const sourceText = text || selected || output;
+    if (!sourceText.trim()) return;
     if (sourceText.length > maxAudioChars) {
-      setAudioError(`Audio text is ${sourceText.length} characters. Limit is ${maxAudioChars}. Select a smaller block or increase the limit deliberately.`);
+      setAudioError(`Selected text is ${sourceText.length} chars. Current cap is ${maxAudioChars}. Select a smaller block or raise the cap deliberately.`);
       return;
     }
-
     setAudioLoading(true);
     setAudioError("");
     if (audioUrl) URL.revokeObjectURL(audioUrl);
@@ -281,8 +355,7 @@ export default function Home() {
         throw new Error(data.error || "TTS request failed");
       }
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      setAudioUrl(url);
+      setAudioUrl(URL.createObjectURL(blob));
     } catch (e: any) {
       setAudioError(e.message || "Audio generation failed");
     } finally {
@@ -290,20 +363,8 @@ export default function Home() {
     }
   }
 
-  function auditCurrentOutput() {
-    if (!output) return;
-    setMode("audit");
-    setUseDeep(true);
-    setPrompt(`Audit this output against the NPL AI Expert quality rubric. Be strict. Identify generic statements, missing depth, missing financial-services specificity, weak evidence, missing frontier signals, cost/delivery risks, and how to rewrite it.\n\nOUTPUT TO AUDIT:\n${output}`);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function researchUpgrade() {
-    setMode("research");
-    setUseWeb(true);
-    setUseDeep(true);
-    setPrompt("Find emerging tools, protocols, examples, regulatory signals and less obvious sources that could upgrade our AI Product Expert for banking and insurance. Prioritize material that is not obvious mainstream AI adoption content. Include what to verify, why it matters, and how to convert it into a training insight.");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  function copyText(text: string) {
+    navigator.clipboard?.writeText(text).catch(() => undefined);
   }
 
   function addRealtimeLog(line: string) {
@@ -344,11 +405,11 @@ export default function Home() {
       dcRef.current = dc;
       dc.onopen = () => {
         setRealtimeStatus("live");
-        addRealtimeLog(`Live voice session started · model ${session.model || "realtime"} · voice ${session.voice || "default"}`);
+        addRealtimeLog(`Voice session started · ${session.model || "realtime"} · ${session.voice || "voice"}`);
         dc.send(JSON.stringify({
           type: "response.create",
           response: {
-            instructions: "Start with one short greeting. Ask what the operator wants to rehearse or what question the audience has.",
+            instructions: "Start with one short greeting. Ask what topic or question we should discuss.",
             output_modalities: ["audio"]
           }
         }));
@@ -356,17 +417,11 @@ export default function Home() {
       dc.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
-          if (msg.type === "conversation.item.input_audio_transcription.completed" && msg.transcript) {
-            addRealtimeLog(`You: ${msg.transcript}`);
-          }
-          if ((msg.type === "response.audio_transcript.done" || msg.type === "response.output_text.done") && (msg.transcript || msg.text)) {
-            addRealtimeLog(`Expert: ${msg.transcript || msg.text}`);
-          }
-          if (msg.type === "error") {
-            setRealtimeError(msg.error?.message || "Realtime API error");
-          }
+          if (msg.type === "conversation.item.input_audio_transcription.completed" && msg.transcript) addRealtimeLog(`You: ${msg.transcript}`);
+          if ((msg.type === "response.audio_transcript.done" || msg.type === "response.output_text.done") && (msg.transcript || msg.text)) addRealtimeLog(`Expert: ${msg.transcript || msg.text}`);
+          if (msg.type === "error") setRealtimeError(msg.error?.message || "Realtime API error");
         } catch {
-          // Ignore non-JSON realtime events.
+          // Ignore non-JSON events.
         }
       };
 
@@ -377,20 +432,14 @@ export default function Home() {
       const sdpRes = await fetch("https://api.openai.com/v1/realtime/calls", {
         method: "POST",
         body: offer.sdp || "",
-        headers: {
-          Authorization: `Bearer ${ephemeralKey}`,
-          "Content-Type": "application/sdp"
-        }
+        headers: { Authorization: `Bearer ${ephemeralKey}`, "Content-Type": "application/sdp" }
       });
-      if (!sdpRes.ok) {
-        const text = await sdpRes.text();
-        throw new Error(text || "Realtime WebRTC connection failed");
-      }
+      if (!sdpRes.ok) throw new Error(await sdpRes.text() || "Realtime WebRTC connection failed");
       const answerSdp = await sdpRes.text();
       await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
     } catch (e: any) {
       stopRealtimeExpert();
-      setRealtimeError(e.message || "Could not start realtime voice expert");
+      setRealtimeError(e.message || "Could not start realtime expert");
       setRealtimeStatus("error");
     }
   }
@@ -410,220 +459,169 @@ export default function Home() {
     addRealtimeLog("Voice session stopped");
   }
 
-  const purpose = modePurpose[mode] || modePurpose.voice_delivery;
+  const jobActions = availableActions.map((a) => (
+    <button
+      key={a.id}
+      className={`choice-button ${a.id === actionId ? "active" : ""}`}
+      onClick={() => changeAction(a.id)}
+      type="button"
+    >
+      <span>{a.label}</span>
+      <small>{a.description}</small>
+    </button>
+  ));
 
   return (
-    <main>
-      <section className="hero-v49">
-        <div className="hero-copy">
-          <span className="badge">NPL internal prototype · UX cleanup build</span>
+    <main className="v5-main">
+      <section className="v5-hero">
+        <div>
+          <span className="badge">NPL internal prototype · Current build v5</span>
           <h1>NPL AI Product Expert</h1>
-          <p className="lead">
-            A working console for preparing, delivering and rehearsing AI product training for banks, insurers and financial services teams.
-          </p>
+          <p className="lead">Three focused workflows: build learning assets, talk with the expert, and deliver or activate content with voice when useful.</p>
         </div>
-        <div className="card build-card">
-          <div className="build-topline">
-            <strong>Current build v4.9</strong>
-            <span className="mini-badge">Cleaner console</span>
-          </div>
-          <p className="small">Choose the outcome, add context, generate the material, then deliver, audit or rehearse it.</p>
-          <div className="workflow-strip">
-            {workflowCards.map((card) => (
-              <div key={card.title}>
-                <strong>{card.title}</strong>
-                <span>{card.text}</span>
-              </div>
-            ))}
+        <div className="hero-status card">
+          <strong>Lightweight quality layer</strong>
+          <p className="small">Quality, evidence and cost are shown as support signals inside each workflow — not as separate products.</p>
+          <div className="status-grid">
+            <span>Cost: {costBand(estimatedTextCost)} · {euro(estimatedTextCost)}</span>
+            <span>Model: {useDeep ? "deep" : "draft"}</span>
+            <span>Voice cap: {maxAudioChars} chars</span>
           </div>
         </div>
       </section>
 
-      <section className="workspace-v49">
-        <aside className="side-panel card">
-          <div className="step-kicker">Step 1</div>
-          <h2>Choose what you need</h2>
-          <p className="small">The mode carries the quality rules. The request box is only for topic, audience, duration and nuance.</p>
+      <section className="job-grid">
+        {(Object.keys(jobs) as JobId[]).map((id) => (
+          <button key={id} className={`job-card ${job === id ? "selected" : ""}`} onClick={() => changeJob(id)} type="button">
+            <small>{jobs[id].tagline}</small>
+            <strong>{jobs[id].title}</strong>
+            <span>{jobs[id].description}</span>
+          </button>
+        ))}
+      </section>
 
-          <label>Access password</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="APP_PASSWORD" />
-
-          <label>Mode</label>
-          <select value={mode} onChange={e => changeMode(e.target.value)}>
-            {modes.map(m => <option value={m.value} key={m.value}>{m.label}</option>)}
-          </select>
-
-          <div className="mode-card-grid">
-            {modes.map((m) => (
-              <button
-                type="button"
-                key={m.value}
-                className={`mode-card-button ${mode === m.value ? "active" : ""}`}
-                onClick={() => changeMode(m.value)}
-              >
-                <span className={`phase-dot ${phaseClass(modePurpose[m.value]?.phase || "prepare")}`}>{modePurpose[m.value]?.phase || "Prepare"}</span>
-                <strong>{m.label}</strong>
-                <small>{m.hint}</small>
-              </button>
-            ))}
+      <section className="workspace">
+        <div className="card left-panel">
+          <div className="section-title">
+            <span>1</span>
+            <div>
+              <strong>{jobs[job].title}</strong>
+              <p className="small">Choose the specific outcome, then provide only the useful context.</p>
+            </div>
           </div>
-        </aside>
 
-        <section className="main-panel-v49">
-          <div className="card mode-brief-card">
-            <div className="mode-brief-top">
+          <div className="choice-grid">{jobActions}</div>
+
+          <label>Context / brief</label>
+          <textarea className="brief-box" value={brief} onChange={(e) => setBrief(e.target.value)} />
+
+          <details className="advanced" open={showAdvanced} onToggle={(e) => setShowAdvanced((e.target as HTMLDetailsElement).open)}>
+            <summary>Advanced settings</summary>
+            <label>Access password</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="APP_PASSWORD" />
+
+            <label>Depth</label>
+            <select value={depth} onChange={(e) => setDepth(e.target.value)}>
+              <option>quick draft</option>
+              <option>client-ready draft</option>
+              <option>deep / source-grounded</option>
+            </select>
+
+            <label className="check-label"><input type="checkbox" checked={useDeep} onChange={(e) => setUseDeep(e.target.checked)} /> Use deep model</label>
+            <label className="check-label"><input type="checkbox" checked={useWeb} onChange={(e) => setUseWeb(e.target.checked)} /> Use web search</label>
+
+            <label>Max ElevenLabs chars per request</label>
+            <input type="number" min="200" max="5000" step="100" value={maxAudioChars} onChange={(e) => setMaxAudioChars(Number(e.target.value || 1200))} />
+          </details>
+
+          <button className="primary" disabled={loading} onClick={runAction}>{loading ? "Working…" : `Create ${currentAction.label}`}</button>
+        </div>
+
+        <div className="right-panel">
+          {job === "talk" && (
+            <div className="card voice-card focused">
+              <div className="section-title">
+                <span>Live</span>
+                <div>
+                  <strong>Talk with the expert by voice</strong>
+                  <p className="small">Use this for debate, panel-style Q&A and fast thinking. Keep test sessions short.</p>
+                </div>
+                <b className={`status-pill ${realtimeStatus === "live" ? "live" : ""}`}>{realtimeStatus}</b>
+              </div>
+              <textarea className="small-textarea" value={realtimeContext} onChange={(e) => setRealtimeContext(e.target.value)} />
+              <label className="check-label"><input type="checkbox" checked={useRealtimeDeep} onChange={(e) => setUseRealtimeDeep(e.target.checked)} /> Stronger realtime model</label>
+              <div className="button-row left">
+                <button onClick={startRealtimeExpert} disabled={realtimeStatus !== "idle" && realtimeStatus !== "error"}>Start voice expert</button>
+                <button className="secondary" onClick={stopRealtimeExpert}>Stop</button>
+              </div>
+              <audio ref={remoteAudioRef} autoPlay className="hidden-audio" />
+              {realtimeError && <p className="error-text small">{realtimeError}</p>}
+              <div className="realtime-log compact">
+                {realtimeLog.length ? realtimeLog.map((line, i) => <p className="small" key={`${i}-${line}`}>{line}</p>) : <p className="small">No live events yet.</p>}
+              </div>
+            </div>
+          )}
+
+          <div className="card output-card-v5">
+            <div className="output-header-v5">
               <div>
-                <span className={`phase-pill ${phaseClass(purpose.phase)}`}>{purpose.phase}</span>
-                <h2>{activeMode.label}</h2>
-                <p className="small">{activeMode.hint}</p>
+                <span className="muted-label">2 · Output</span>
+                <h2>{currentAction.label}</h2>
+                <p className="small">{currentAction.description}</p>
+                {meta && <p className="small">Model: {meta.model} · Profile: {meta.cost_profile || "n/a"} · Tools: {(meta.tools || []).join(", ") || "none"}</p>}
               </div>
-              <div className="expected-output-box">
-                <strong>Expected output</strong>
-                <p>{purpose.outputs}</p>
+              <div className="button-row">
+                <button className="secondary" onClick={() => copyText(output)} disabled={!output}>Copy</button>
+                <button className="secondary" onClick={runQualityCheck} disabled={!output || qualityLoading}>{qualityLoading ? "Checking…" : "Quality check"}</button>
               </div>
             </div>
-            <div className="mode-brief-grid">
-              <div><strong>What to input</strong><span>{purpose.inputs}</span></div>
-              <div><strong>Best used for</strong><span>{purpose.when}</span></div>
-              <div><strong>Cost posture</strong><span>{modeCostLabel(activeMode.cost)} · {suggestedModelUse} · {webStatus}</span></div>
-            </div>
+
+            {qualityNote && (
+              <div className="quality-panel">
+                <strong>Quality / evidence signal</strong>
+                <div>{qualityNote}</div>
+              </div>
+            )}
+
+            <div className="output-text">{output || "The result will appear here. The interface keeps advanced controls hidden unless you need them."}</div>
           </div>
 
-          <div className="input-output-grid-v49">
-            <section className="card composer-card">
-              <div className="step-kicker">Step 2</div>
-              <h2>Give context</h2>
-              <p className="small">Use short instructions. The mode already enforces source discipline, nuance and financial-services specificity where relevant.</p>
-
-              <label>Request</label>
-              <textarea value={prompt} onChange={e => setPrompt(e.target.value)} />
-
-              <div className="cost-box compact-cost">
-                <strong>Cost guardrails</strong>
-                <div className="cost-proxy-grid">
-                  <div>
-                    <span className="cost-label">Text estimate</span>
-                    <strong>{euro(estimatedTextCost)}</strong>
-                    <small>{costBand(estimatedTextCost)} · rough proxy</small>
-                  </div>
-                  <div>
-                    <span className="cost-label">Audio cap</span>
-                    <strong>{euro(elevenCostProxy(maxAudioChars).eurProxy)}</strong>
-                    <small>{maxAudioChars.toLocaleString()} chars max</small>
-                  </div>
+          {(job === "deliver" || currentAction.mode === "voice_delivery" || voiceBlocks.length > 0) && output && (
+            <div className="card blocks-card">
+              <div className="output-header-v5">
+                <div>
+                  <span className="muted-label">3 · Delivery blocks</span>
+                  <h2>Speak or export selected blocks</h2>
+                  <p className="small">Generate audio one block at a time. Full output: {outputChars.toLocaleString()} voice chars · approx {euro(elevenCostProxy(outputChars).eurProxy)}.</p>
                 </div>
-                <label className="check-label">
-                  <input type="checkbox" checked={useDeep} onChange={e => setUseDeep(e.target.checked)} />
-                  <span>Use deep model</span>
-                </label>
-                <p className="small">Client-ready lessons, PoV, audits and research only. Keep off for drafts.</p>
-
-                <label className="check-label">
-                  <input type="checkbox" checked={useWeb} onChange={e => setUseWeb(e.target.checked)} />
-                  <span>Use web search</span>
-                </label>
-                <p className="small">Use mainly for Research Scout and Frontier Briefing.</p>
-
-                <label>Max ElevenLabs chars</label>
-                <input type="number" min="200" max="5000" step="100" value={maxAudioChars} onChange={(e) => setMaxAudioChars(Number(e.target.value || 1200))} />
-                <p className="small">Default: selected text or one block only. Current cap ≈ {fullAudioProxy.estimatedCredits.toLocaleString()} credits / {euro(fullAudioProxy.eurProxy)} proxy.</p>
-              </div>
-
-              <div className="button-row left composer-actions">
-                <button disabled={loading} onClick={submit}>{loading ? "Thinking…" : "Generate output"}</button>
-                <button className="secondary" type="button" onClick={researchUpgrade}>Research upgrade</button>
-              </div>
-            </section>
-
-            <section className="output-stack-v49">
-              <div className="card output-card">
-                <div className="output-header">
-                  <div>
-                    <div className="step-kicker">Step 3</div>
-                    <strong>Output</strong>
-                    <p className="small">Review, copy, audit, or turn selected blocks into voice. Use audio on selected blocks only.</p>
-                    {meta && <p className="small">Model: {meta.model} · Profile: {meta.cost_profile || "n/a"} · Tools: {(meta.tools || []).join(", ") || "none"} · Web: {String(meta.web_enabled && meta.web_requested)}</p>}
-                    {!!output && <p className="small">Clean voice length: {outputChars.toLocaleString()} chars · Blocks detected: {voiceBlocks.length} · Full-output audio proxy: {euro(elevenCostProxy(outputChars).eurProxy)}</p>}
-                  </div>
-                  <div className="button-row">
-                    <button className="secondary" onClick={copyOutput}>Copy</button>
-                    <button className="secondary" onClick={readOutput}>Browser voice</button>
-                    <button className="secondary" onClick={() => generateElevenLabsAudio()} disabled={audioLoading || !output}>{audioLoading ? "Creating…" : "ElevenLabs selected/full"}</button>
-                    <button className="secondary" onClick={stopVoice}>Stop</button>
-                    <button className="secondary" onClick={auditCurrentOutput}>Audit output</button>
-                  </div>
+                <div className="button-row">
+                  <button className="secondary" onClick={() => speakText(output)}>Browser voice</button>
+                  <button className="secondary" onClick={stopBrowserVoice}>Stop voice</button>
                 </div>
-                {audioError && <p className="small error-text">{audioError}</p>}
-                {audioUrl && <div className="audio-box"><audio className="audio-player" controls src={audioUrl} /><p className="small">Audio generated from {audioText.length.toLocaleString()} chars · approx. {euro(elevenCostProxy(audioText.length).eurProxy)} proxy.</p></div>}
-                <div className="output">{output || "The generated answer will appear here."}</div>
               </div>
 
-              {!!voiceBlocks.length && (
-                <div className="card block-card">
-                  <div className="output-header">
+              {audioError && <p className="error-text small">{audioError}</p>}
+              {audioUrl && <div className="audio-box"><audio controls src={audioUrl} /><p className="small">Audio from {audioText.length.toLocaleString()} chars · approx {euro(elevenCostProxy(audioText.length).eurProxy)}.</p></div>}
+
+              <div className="block-list-v5">
+                {voiceBlocks.map((block, idx) => (
+                  <div className="voice-block-v5" key={`${idx}-${block.slice(0, 12)}`}>
                     <div>
-                      <strong>Voice blocks</strong>
-                      <p className="small">Generate audio for one block at a time. This is the affordable rehearsal workflow.</p>
+                      <strong>Block {idx + 1}</strong>
+                      <p>{block.length > 300 ? `${block.slice(0, 300)}…` : block}</p>
+                    </div>
+                    <div className="block-actions">
+                      <small>{block.length} chars · {euro(elevenCostProxy(block.length).eurProxy)}</small>
+                      <button className="secondary" onClick={() => generateElevenLabsAudio(block)} disabled={audioLoading || block.length > maxAudioChars}>{audioLoading ? "Creating…" : "ElevenLabs"}</button>
+                      <button className="secondary" onClick={() => speakText(block)}>Browser</button>
+                      <button className="secondary" onClick={() => copyText(block)}>Copy</button>
                     </div>
                   </div>
-                  <div className="block-list">
-                    {voiceBlocks.map((block, idx) => (
-                      <div className="voice-block" key={`${idx}-${block.slice(0, 20)}`}>
-                        <div className="voice-block-title">
-                          <strong>Block {idx + 1}</strong>
-                          <span className="small">{block.length} chars · {euro(elevenCostProxy(block.length).eurProxy)}</span>
-                        </div>
-                        <p>{block.length > 280 ? `${block.slice(0, 280)}…` : block}</p>
-                        <div className="button-row left">
-                          <button className="secondary" onClick={() => generateElevenLabsAudio(block)} disabled={audioLoading || block.length > maxAudioChars}>ElevenLabs block</button>
-                          <button className="secondary" onClick={() => speakInChunks(block)}>Browser block</button>
-                          <button className="secondary" onClick={() => copyText(block)}>Copy block</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </section>
-          </div>
-        </section>
-
-        <aside className="card voice-expert-card-v49">
-          <div className="step-kicker">Live beta</div>
-          <div className="voice-expert-header">
-            <div>
-              <strong>Interactive voice expert</strong>
-              <p className="small">Use for rehearsal and internal demos. Not public webinars yet.</p>
+                ))}
+              </div>
             </div>
-            <span className={`status-pill ${realtimeStatus === "live" ? "live" : ""}`}>{realtimeStatus}</span>
-          </div>
-
-          <label>Live session context</label>
-          <textarea className="small-textarea" value={realtimeContext} onChange={(e) => setRealtimeContext(e.target.value)} />
-
-          <label className="check-label">
-            <input type="checkbox" checked={useRealtimeDeep} onChange={e => setUseRealtimeDeep(e.target.checked)} />
-            <span>Use stronger realtime model</span>
-          </label>
-          <p className="small">Default should be the cheaper realtime model. Use stronger only for important rehearsals.</p>
-
-          <div className="button-row left">
-            <button type="button" onClick={startRealtimeExpert} disabled={realtimeStatus !== "idle" && realtimeStatus !== "error"}>Start voice expert</button>
-            <button className="secondary" type="button" onClick={stopRealtimeExpert}>Stop</button>
-          </div>
-
-          <audio ref={remoteAudioRef} autoPlay className="hidden-audio" />
-          {realtimeError && <p className="small error-text">{realtimeError}</p>}
-
-          <div className="realtime-notes">
-            <strong>How to use</strong>
-            <p className="small">Ask one question at a time. Interrupt if needed. Keep sessions short while testing cost and quality.</p>
-            <strong>Recent transcript/events</strong>
-            <div className="realtime-log">
-              {realtimeLog.length ? realtimeLog.map((line, i) => <p className="small" key={`${i}-${line}`}>{line}</p>) : <p className="small">No live events yet.</p>}
-            </div>
-          </div>
-        </aside>
+          )}
+        </div>
       </section>
     </main>
   );

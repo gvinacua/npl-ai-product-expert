@@ -1,45 +1,33 @@
-# NPL AI Product Expert
+# NPL AI Product Expert — v5
 
-Current build: v4.9 — UX/UI cleanup and clearer delivery console v4.8.2
+Internal prototype for Net Positive Labs. v5 reorganizes the app around three jobs-to-be-done: build a learning asset, talk with the expert, and deliver / activate.
 
-Internal prototype for a research-led AI product expert speaker/trainer for financial services.
+## Main workflows
 
-## v4.8.2 focus
-- Interactive Voice Expert beta using OpenAI Realtime over WebRTC.
-- Cost-aware realtime model selection.
-- Block-level ElevenLabs audio generation remains available for prepared delivery.
-- Cost proxy display from v4.7 remains in place.
-- Better separation between prepared speaker console and live Q&A rehearsal.
+- **Build a learning asset**: sessions, modules, source packs and programme/proposal material.
+- **Talk with the expert**: text or live voice conversation, point-of-view building, panel answers and sparring.
+- **Deliver / activate**: voice-ready blocks, ElevenLabs block audio, live Q&A support and operator-ready delivery packs.
+
+Quality, evidence and cost now appear as transversal signals inside each workflow rather than separate primary modes.
 
 ## Environment variables
 
-Required:
-- OPENAI_API_KEY
-- OPENAI_MODEL
-- APP_PASSWORD
+```
+OPENAI_API_KEY=...
+APP_PASSWORD=...
+OPENAI_MODEL=gpt-4.1-mini
+OPENAI_DEEP_MODEL=gpt-4.1
+ENABLE_WEB_SEARCH=true_or_false
+ELEVENLABS_API_KEY=...
+ELEVENLABS_VOICE_ID=...
+ELEVENLABS_MODEL_ID=eleven_multilingual_v2
+OPENAI_REALTIME_MODEL=gpt-realtime-2
+OPENAI_REALTIME_DEEP_MODEL=gpt-realtime-2
+OPENAI_REALTIME_VOICE=marin
+```
 
-Recommended:
-- OPENAI_DEEP_MODEL
-- OPENAI_SEARCH_MODEL
-- ENABLE_WEB_SEARCH=true
-- ELEVENLABS_API_KEY
-- ELEVENLABS_VOICE_ID
-- ELEVENLABS_MODEL_ID=eleven_multilingual_v2
-- ELEVENLABS_MAX_CHARS=3000
+## Notes
 
-Optional for Interactive Voice Expert:
-- OPENAI_REALTIME_MODEL=gpt-4o-mini-realtime-preview
-- OPENAI_REALTIME_DEEP_MODEL=gpt-4o-realtime-preview
-- OPENAI_REALTIME_VOICE=alloy
-
-## Cost principle
-Use cheap/draft model by default. Use deep/search/voice only when the output is worth it. Keep realtime voice sessions short during testing.
-
-
-## v4.8.2 Realtime fix
-
-Updated the browser voice expert to use the current OpenAI Realtime WebRTC flow: server-side client secret creation via `/v1/realtime/client_secrets` and browser SDP exchange with `/v1/realtime/calls`.
-
-
-## v4.8.2
-Fixes realtime `response.modalities` by using `output_modalities`. Defaults low-cost realtime to `gpt-realtime-mini`.
+- Keep deep models off for normal drafts.
+- Generate ElevenLabs audio one block at a time.
+- Use live voice for internal conversation/rehearsal, not public webinar attendance yet.
